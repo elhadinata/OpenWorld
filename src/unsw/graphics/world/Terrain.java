@@ -2,6 +2,7 @@ package unsw.graphics.world;
 
 
 
+import java.nio.DoubleBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,15 @@ public class Terrain {
     private List<Road> roads;
     private Vector3 sunlight;
 
+    
+    public int width() {
+    	return width;
+    }
+    
+    public int depth() {
+    	return depth;
+    }
+    
     /**
      * Create a new terrain
      *
@@ -95,11 +105,31 @@ public class Terrain {
      * @return
      */
     public float altitude(float x, float z) {
-        float altitude = 0;
+        double altitude = 0;
 
         // TODO: Implement this
+        // use bilinear inter polation
+        int x1 = (int) Math.ceil(x);
+        int x2 = (int) Math.floor(x);
         
-        return altitude;
+        int z1 = (int) Math.ceil(z);
+        int z2 = (int) Math.floor(z);
+        
+        if(x1==x2 && z1==z2) 
+        	return (float) getGridAltitude(x1, z1);
+        
+        // now get y1
+        double y1 = getGridAltitude(x1, z1);
+        // get y2
+        double y2 = getGridAltitude(x2, z2);
+        
+        float t = x-x2;
+        
+        altitude = y1*(1-t) + y2*t;
+        
+        System.out.println(altitude);
+        
+        return (float)altitude;
     }
 
     /**
