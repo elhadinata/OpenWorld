@@ -127,7 +127,7 @@ public class Terrain {
         
         altitude = y1*(1-t) + y2*t;
         
-        System.out.println(altitude);
+        //System.out.println(altitude);
         
         return (float)altitude;
     }
