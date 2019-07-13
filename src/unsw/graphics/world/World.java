@@ -1,9 +1,7 @@
 package unsw.graphics.world;
 
-import static org.hamcrest.CoreMatchers.not;
 
 import java.awt.Color;
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -11,8 +9,9 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.IntFunction;
 
+import com.jogamp.newt.event.KeyEvent;
+import com.jogamp.newt.event.KeyListener;
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.util.GLBuffers;
@@ -24,7 +23,6 @@ import unsw.graphics.Point2DBuffer;
 import unsw.graphics.Point3DBuffer;
 import unsw.graphics.Shader;
 import unsw.graphics.Texture;
-import unsw.graphics.Vector4;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
 import unsw.graphics.geometry.TriangleMesh;
@@ -36,7 +34,7 @@ import unsw.graphics.geometry.TriangleMesh;
  *
  * @author malcolmr
  */
-public class World extends Application3D {
+public class World extends Application3D implements KeyListener{
 
     private Terrain terrain;
 	private List<Point3D>  vertex;
@@ -54,6 +52,9 @@ public class World extends Application3D {
     private int indicesName;
 	
 	private Shader shader;
+	
+	private Camera camera;
+	
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -78,27 +79,32 @@ public class World extends Application3D {
 		super.display(gl);
 		
 		// Identity
-		CoordFrame3D frame = CoordFrame3D.identity();
+		CoordFrame3D frame = CoordFrame3D.identity().translate(-3,0,-4);
 		
 		// Write something here, probably
-		CoordFrame3D viewFrame = CoordFrame3D.identity()
-				.translate(0, 0, -2)
-                .translate(-4, 2, -9)
-                .scale(0.75f, 0.75f, 0.75f)
-                .rotateX(35).rotateY(10).rotateZ(5);
+//		CoordFrame3D viewFrame = CoordFrame3D.identity()
+//				.translate(0, 0, -2)
+//                .translate(-4, 2, -9)
+//                .scale(0.75f, 0.75f, 0.75f)
+//                .rotateX(35).rotateY(10).rotateZ(5);
 	
 				
-        Shader.setViewMatrix(gl, viewFrame.getMatrix());
+        Shader.setViewMatrix(gl, camera.frame().getMatrix());
         
          
         // Terrain Texture
         Shader.setInt(gl, "tex", 0);
-        
         gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[0].getId());
         
+        // Set wrap mode for texture in S direction
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S,
+                GL.GL_MIRRORED_REPEAT);
+        // Set wrap mode for texture in T direction
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T,
+                GL3.GL_MIRRORED_REPEAT);
         
-        
+        Shader.setPenColor(gl, Color.WHITE);
         
         // DRAW the texture differently, too smooth, probably wrong text coordinates
 //        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
@@ -113,9 +119,9 @@ public class World extends Application3D {
         
         terrainMesh.draw(gl, frame);
         
-//        Shader.setInt(gl, "tex", 1);
-//        gl.glActiveTexture(GL.GL_TEXTURE1);
-//        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
+        Shader.setInt(gl, "tex", 1);
+        gl.glActiveTexture(GL.GL_TEXTURE1);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
         
         Shader.setPenColor(gl, Color.WHITE);
         
@@ -123,10 +129,11 @@ public class World extends Application3D {
         	float x = t.getPosition().getX();
         	float z = t.getPosition().getZ();
         	
-        	CoordFrame3D treeFrame= frame.translate(0,5,0).translate(x, terrain.altitude(x, z), z);
+        	CoordFrame3D treeFrame= frame.translate(0,4.9f,0).translate(x, terrain.altitude(x, z), z);
         	
         	treeMesh.draw(gl, treeFrame);
         }
+        
 	}
 
 	@Override
@@ -139,6 +146,11 @@ public class World extends Application3D {
 	public void init(GL3 gl) {
 		super.init(gl);
 		
+		
+		
+		camera = new Camera(terrain);
+		
+		getWindow().addKeyListener(this);
 		
 		int[] names = new int[3];
         gl.glGenBuffers(3, names, 0);
@@ -194,14 +206,24 @@ public class World extends Application3D {
         this.indices=new ArrayList<>();
         for(int z=0; z<depth-1; z++) {
         	for(int x=0; x<width-1; x++) {
-        		indices.add(x+z*width);		// 0
-        		indices.add(x+(z+1)*width);	// 2
-        		indices.add((x+1)+z*width);	// 1
+//        		indices.add(x+z*width);		// 0
+//        		indices.add(x+(z+1)*width);	// 2
+//        		indices.add((x+1)+z*width);	// 1
+//        		
+//
+//        		indices.add((x+1)+z*width);		// 0
+//        		indices.add(x+(z+1)*width); 	// 2
+//        		indices.add((x+1)+(z+1)*width);	// 3
         		
+        		
+        		indices.add((x+1)+z*width);	// 1
+        		indices.add(x+(z+1)*width);	// 2
+        		indices.add(x+z*width);		// 0
 
-        		indices.add((x+1)+z*width);		// 0
-        		indices.add(x+(z+1)*width); 	// 2
         		indices.add((x+1)+(z+1)*width);	// 3
+        		indices.add(x+(z+1)*width); 	// 2
+        		indices.add((x+1)+z*width);		// 0
+        		
         	}
         }
         vertexBuffer = new Point3DBuffer(vertex);
@@ -248,5 +270,32 @@ public class World extends Application3D {
 	public void reshape(GL3 gl, int width, int height) {
         super.reshape(gl, width, height);
         Shader.setProjMatrix(gl, Matrix4.perspective(60, width/(float)height, 1, 100));
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		switch (e.getKeyCode()) {
+        case KeyEvent.VK_LEFT:
+            camera.left();
+            break;
+        case KeyEvent.VK_RIGHT:
+            camera.right();
+            break;
+        case KeyEvent.VK_UP:
+            camera.up();
+            break;
+        case KeyEvent.VK_DOWN:
+            camera.down();
+            break;
+        default:
+            break;
+        }
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
 	}
 }
