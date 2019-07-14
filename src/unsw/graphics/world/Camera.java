@@ -4,6 +4,7 @@ package unsw.graphics.world;
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
 import unsw.graphics.geometry.Point3D;
+import unsw.graphics.scene.MathUtil;
 
 public class Camera {
 	private CoordFrame3D viewFrame;
@@ -46,7 +47,9 @@ public class Camera {
 //		System.out.println(next.getMatrix());
 		System.out.println(x+" "+z);
 //		
-		viewFrame = viewFrame.translate(0, terrain.altitude(x/width, z/depth), 1);
+		rot = MathUtil.normaliseAngle(rot);
+		viewFrame = viewFrame.translate((float)(1*Math.sin(rot)), terrain.altitude(x/width, z/depth), 
+				(float)(1*Math.cos(rot)));
 		
 	}
 	
@@ -56,7 +59,10 @@ public class Camera {
 		float x = next.getMatrix().getValues()[3];
 		float z = next.getMatrix().getValues()[11];
 //		System.out.println(x+" "+z);
-		viewFrame = viewFrame.translate(0, terrain.altitude(x, z), -1);
+//		viewFrame = viewFrame.translate(0, terrain.altitude(x, z), -1);
+		rot = MathUtil.normaliseAngle(rot);
+		viewFrame = viewFrame.translate((float)(-1*Math.sin(rot)), 0, 
+				(float)(-1*Math.cos(rot)));
 	}
 	
 	public void left() {
