@@ -55,6 +55,7 @@ public class World extends Application3D implements KeyListener{
 	
 	private Camera camera;
 	
+	private static final boolean LIGHTING = true;
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -91,18 +92,20 @@ public class World extends Application3D implements KeyListener{
 				
         Shader.setViewMatrix(gl, camera.frame().getMatrix());
         
-         
+        
+        
+        
         // Terrain Texture
         Shader.setInt(gl, "tex", 0);
         gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[0].getId());
         
         // Set wrap mode for texture in S direction
-        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S,
-                GL.GL_MIRRORED_REPEAT);
-        // Set wrap mode for texture in T direction
-        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T,
-                GL3.GL_MIRRORED_REPEAT);
+//        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S,
+//                GL.GL_MIRRORED_REPEAT);
+//        // Set wrap mode for texture in T direction
+//        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T,
+//                GL3.GL_MIRRORED_REPEAT);
         
         Shader.setPenColor(gl, Color.WHITE);
         
@@ -114,7 +117,17 @@ public class World extends Application3D implements KeyListener{
 //        gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
 //        
 //        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
-        
+        if (LIGHTING) {
+            Shader.setPoint3D(gl, "lightPos", new Point3D(0, -4, 2));
+            Shader.setColor(gl, "lightIntensity", Color.WHITE);
+            Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
+
+            // Set the material properties
+            Shader.setColor(gl, "ambientCoeff", Color.WHITE);
+            Shader.setColor(gl, "diffuseCoeff", new Color(0.5f, 0.5f, 0.5f));
+            Shader.setColor(gl, "specularCoeff", new Color(0.8f, 0.8f, 0.8f));
+            Shader.setFloat(gl, "phongExp", 16f);
+        }
         
         
         terrainMesh.draw(gl, frame);
@@ -133,6 +146,8 @@ public class World extends Application3D implements KeyListener{
         	
         	treeMesh.draw(gl, treeFrame);
         }
+        
+        
         
 	}
 
@@ -261,9 +276,13 @@ public class World extends Application3D implements KeyListener{
 		textures[0] = new Texture(gl, "res/textures/cartoon_grass.jpg", "jpg", false);
 		textures[1] = new Texture(gl, "res/textures/rock.bmp", "bmp", false);
         
-		shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
+		if (LIGHTING) {
+			shader = new Shader(gl, "shaders/vertex_tex_phong.glsl",
+                    "shaders/fragment_tex_phong.glsl");
+        } else {
+        	shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
 	                "shaders/fragment_tex_3d.glsl");
-        
+        }
 	}
 	
 	@Override
@@ -282,10 +301,10 @@ public class World extends Application3D implements KeyListener{
             camera.right();
             break;
         case KeyEvent.VK_UP:
-            camera.up();
+            camera.forward();
             break;
         case KeyEvent.VK_DOWN:
-            camera.down();
+            camera.backward();
             break;
         default:
             break;

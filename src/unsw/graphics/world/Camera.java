@@ -1,15 +1,22 @@
 package unsw.graphics.world;
 
 
+import java.util.Vector;
+
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
-import unsw.graphics.geometry.Point3D;
+import unsw.graphics.Vector3;
+import unsw.graphics.Vector4;
 import unsw.graphics.scene.MathUtil;
 
 public class Camera {
 	private CoordFrame3D viewFrame;
 	private float rot;
 	private Terrain terrain;
+	
+//	private static final Vector4 UP = new Vector4(0, 1, 0, 0);
+	private static final float ROTATION_SPEED = 2;
+	private Vector4 viewDirection;
 	
 	public Camera() {
 		viewFrame = CoordFrame3D.identity()
@@ -24,6 +31,8 @@ public class Camera {
                 .scale(0.75f, 0.75f, 0.75f);
 		rot = 0;
 		this.terrain = terrain;
+		viewDirection = new Vector4(0, 0, 1, 0);
+		
 	}
 	
 	public CoordFrame3D frame() {
@@ -31,49 +40,25 @@ public class Camera {
 	}
 	
 	
-	public void up() {
-//		System.out.println("up");
-		
-		Matrix4 next = viewFrame.translate(0, 0, 1).getMatrix();
-		float[] arr = next.getValues();
-//		for(int i =0; i<16; ++i) {
-//			System.out.print(" "+arr[i]);
-//		}
-		float x = arr[3];
-		float z = arr[11];
-		float width = terrain.width();
-		float depth = terrain.depth();
-		
-//		System.out.println(next.getMatrix());
-		System.out.println(x+" "+z);
-//		
-		rot = MathUtil.normaliseAngle(rot);
-		viewFrame = viewFrame.translate((float)(1*Math.sin(rot)), terrain.altitude(x/width, z/depth), 
-				(float)(1*Math.cos(rot)));
-		
+	public void forward() {
+		viewFrame = viewFrame.translate(viewDirection.asPoint3D());		
 	}
 	
-	public void down() {
-//		System.out.println("down");
-		CoordFrame3D next = viewFrame.translate(0, 0, -1);
-		float x = next.getMatrix().getValues()[3];
-		float z = next.getMatrix().getValues()[11];
-//		System.out.println(x+" "+z);
-//		viewFrame = viewFrame.translate(0, terrain.altitude(x, z), -1);
-		rot = MathUtil.normaliseAngle(rot);
-		viewFrame = viewFrame.translate((float)(-1*Math.sin(rot)), 0, 
-				(float)(-1*Math.cos(rot)));
+	public void backward() {
+		viewFrame = viewFrame.translate(viewDirection.trim().negate().asPoint3D());	
 	}
 	
 	public void left() {
-//		System.out.println("left");
-		rot = 2;
+		
+		rot = ROTATION_SPEED;
 		viewFrame = viewFrame.rotateY(rot);
+		viewDirection = Matrix4.rotationY(-ROTATION_SPEED).multiply(viewDirection);
+		
 	}
 	
 	public void right() {
-//		System.out.println("right");
-		rot = -2;
+		rot = -ROTATION_SPEED;
 		viewFrame = viewFrame.rotateY(rot);
+		viewDirection = Matrix4.rotationY(ROTATION_SPEED).multiply(viewDirection);
 	}
 }
