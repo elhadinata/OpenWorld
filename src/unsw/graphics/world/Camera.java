@@ -1,13 +1,10 @@
 package unsw.graphics.world;
 
 
-import java.util.Vector;
 
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
-import unsw.graphics.Vector3;
 import unsw.graphics.Vector4;
-import unsw.graphics.scene.MathUtil;
 
 public class Camera {
 	private CoordFrame3D viewFrame;
@@ -49,7 +46,6 @@ public class Camera {
 	}
 	
 	public void left() {
-		
 		rot = ROTATION_SPEED;
 		viewFrame = viewFrame.rotateY(rot);
 		viewDirection = Matrix4.rotationY(-ROTATION_SPEED).multiply(viewDirection);
