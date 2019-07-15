@@ -23,6 +23,7 @@ import unsw.graphics.Point2DBuffer;
 import unsw.graphics.Point3DBuffer;
 import unsw.graphics.Shader;
 import unsw.graphics.Texture;
+import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
 import unsw.graphics.geometry.TriangleMesh;
@@ -117,8 +118,11 @@ public class World extends Application3D implements KeyListener{
 //        gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
 //        
 //        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
+        
+        // Use phong shader
         if (LIGHTING) {
-            Shader.setPoint3D(gl, "lightPos", new Point3D(0, -4, 2));
+        	Vector3 light = terrain.getSunlight();
+            Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
             Shader.setColor(gl, "lightIntensity", Color.WHITE);
             Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 
