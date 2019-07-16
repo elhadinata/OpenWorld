@@ -82,45 +82,33 @@ public class World extends Application3D implements KeyListener{
 		
 		// Identity
 		CoordFrame3D frame = CoordFrame3D.identity().translate(-3,0,-4);
-		
-		// Write something here, probably
-//		CoordFrame3D viewFrame = CoordFrame3D.identity()
-//				.translate(0, 0, -2)
-//                .translate(-4, 2, -9)
-//                .scale(0.75f, 0.75f, 0.75f)
-//                .rotateX(35).rotateY(10).rotateZ(5);
-	
 				
         Shader.setViewMatrix(gl, camera.frame().getMatrix());
         
-        
-        
-        
-        // Terrain Texture
+        // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
         gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[0].getId());
-        
-        // Set wrap mode for texture in S direction
-//        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S,
-//                GL.GL_MIRRORED_REPEAT);
-//        // Set wrap mode for texture in T direction
-//        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T,
-//                GL3.GL_MIRRORED_REPEAT);
-        
+      
         Shader.setPenColor(gl, Color.WHITE);
         
-        // DRAW the texture differently, too smooth, probably wrong text coordinates
-//        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
-//        gl.glVertexAttribPointer(Shader.POSITION, 3, GL.GL_FLOAT, false, 0, 0);
-//        
-//        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
-//        gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
-//        
-//        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
+        // DRAW the texture according to 
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
+        gl.glVertexAttribPointer(Shader.POSITION, 3, GL.GL_FLOAT, false, 0, 0);
         
-        // Use phong shader
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
+        gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
+        
+        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
+        
+        terrainMesh.draw(gl, frame);
+        
+        Shader.setInt(gl, "tex", 1);
+        gl.glActiveTexture(GL.GL_TEXTURE1);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
+        
         if (LIGHTING) {
+        	// Set the lighting properties
         	Vector3 light = terrain.getSunlight();
             Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
             Shader.setColor(gl, "lightIntensity", Color.WHITE);
@@ -132,13 +120,6 @@ public class World extends Application3D implements KeyListener{
             Shader.setColor(gl, "specularCoeff", new Color(0.8f, 0.8f, 0.8f));
             Shader.setFloat(gl, "phongExp", 16f);
         }
-        
-        
-        terrainMesh.draw(gl, frame);
-        
-        Shader.setInt(gl, "tex", 1);
-        gl.glActiveTexture(GL.GL_TEXTURE1);
-        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
         
         Shader.setPenColor(gl, Color.WHITE);
         
@@ -178,6 +159,43 @@ public class World extends Application3D implements KeyListener{
         texCoordsName = names[1];
         indicesName = names[2];
 		
+        vertexBuffer =new Point3DBuffer(Arrays.asList(
+        		new Point3D(-1,-1,1), 
+                new Point3D(-1,1,1),
+                new Point3D(1,-1,1), 
+                new Point3D(1,1,1),
+                new Point3D(1,-1,-1), 
+                new Point3D(1,1,-1),
+                new Point3D(-1,-1,-1), 
+                new Point3D(-1,1,-1),
+                new Point3D(-1,-1,1),  //Repeating the starting vertices 
+                new Point3D(-1,1,1))); 
+        
+        
+        texCoordBuffer = new Point2DBuffer(Arrays.asList(
+        		new Point2D(0,0),
+                new Point2D(0,1f),
+                new Point2D(0.25f,0),
+                new Point2D(0.25f,1f),
+                new Point2D(0.5f,0),
+                new Point2D(0.5f,1f),
+                new Point2D(0.75f,0),
+                new Point2D(0.75f,1f),
+                new Point2D(1,0),
+                new Point2D(1,1f)));
+        
+        indicesBuffer = GLBuffers.newDirectIntBuffer(new int[] {
+        		0,2,1,
+                1,2,3,
+                2,4,3,
+                3,4,5,
+                4,6,5,
+                5,6,7,
+                6,8,7,
+                7,8,9,
+                
+            });
+//        
 		// Terrain
 		initTerrain();
 		terrainMesh = new TriangleMesh(vertex, indices,true);
@@ -216,24 +234,20 @@ public class World extends Application3D implements KeyListener{
         
 		this.vertex= new ArrayList<>();
 
+		
+		//texCoordBuffer = new Point2DBuffer(width*depth);
+		ArrayList<Point2D> texCoord = new ArrayList<>();
+		
     	for(int z=0; z<10; z++) {
     		for(int x=0;x <10 ; x++) {
     			vertex.add(new Point3D(x, terrain.altitude(x, z), z));
+    			texCoord.add(new Point2D(x, z));
         	}
         }
 
         this.indices=new ArrayList<>();
         for(int z=0; z<depth-1; z++) {
         	for(int x=0; x<width-1; x++) {
-//        		indices.add(x+z*width);		// 0
-//        		indices.add(x+(z+1)*width);	// 2
-//        		indices.add((x+1)+z*width);	// 1
-//        		
-//
-//        		indices.add((x+1)+z*width);		// 0
-//        		indices.add(x+(z+1)*width); 	// 2
-//        		indices.add((x+1)+(z+1)*width);	// 3
-        		
         		
         		indices.add((x+1)+z*width);	// 1
         		indices.add(x+(z+1)*width);	// 2
@@ -246,18 +260,9 @@ public class World extends Application3D implements KeyListener{
         	}
         }
         vertexBuffer = new Point3DBuffer(vertex);
-        texCoordBuffer = new Point2DBuffer(Arrays.asList(
-                new Point2D(0,0),
-                new Point2D(0,1f),
-                new Point2D(0.25f,0),
-                new Point2D(0.25f,1f),
-                new Point2D(0.5f,0),
-                new Point2D(0.5f,1f),
-                new Point2D(0.75f,0),
-                new Point2D(0.75f,1f),
-                new Point2D(1,0),
-                new Point2D(1,1f)));
-
+   
+        texCoordBuffer = new Point2DBuffer(texCoord);
+        
         int[] array = new int[indices.size()];
         for(int i = 0; i < indices.size(); i++) 
         	array[i] = indices.get(i);
@@ -281,12 +286,13 @@ public class World extends Application3D implements KeyListener{
 		textures[1] = new Texture(gl, "res/textures/rock.bmp", "bmp", false);
         
 		if (LIGHTING) {
-			shader = new Shader(gl, "shaders/vertex_tex_phong.glsl",
-                    "shaders/fragment_tex_phong.glsl");
+			shader = new Shader(gl, "shaders/vertex_ass_phong.glsl",
+                    "shaders/fragment_ass_phong.glsl");
         } else {
         	shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
 	                "shaders/fragment_tex_3d.glsl");
         }
+		shader.use(gl);
 	}
 	
 	@Override
