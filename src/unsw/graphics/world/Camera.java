@@ -5,6 +5,7 @@ package unsw.graphics.world;
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
 import unsw.graphics.Vector4;
+import unsw.graphics.examples.sailing.objects.Mouse;
 import unsw.graphics.geometry.Point3D;
 
 public class Camera {
@@ -16,22 +17,25 @@ public class Camera {
 	private Terrain terrain;
 	
 	private static final float ROTATION_SPEED = 2;
+	private static final float TRANS_SPEED = 0.2f;
+	
 	private Vector4 viewDirection;
 	
 
 	public Camera(Terrain terrain, CoordFrame3D frame) {
 		
-		// To Set the initial position of camera
-		viewFrameIdentity = CoordFrame3D.identity()
-				.translate(-1, -1.5f, -9)
-                .scale(0.75f, 0.75f, 0.75f);
 		
-		viewFrame = viewFrameIdentity;
-		this.frame = frame;
-		rot = 0;
 		this.terrain = terrain;
 		
-		viewDirection = new Vector4(0, 0, 1, 0);
+		
+		// To Set the initial position of camera
+		viewFrameIdentity = CoordFrame3D.identity();
+		viewFrame = viewFrameIdentity;
+		this.frame = frame.translate(10, -0.7f, 10);//.rotateY(135);
+		//this.viewFrame = viewFrame.translate(10, -0.7f, 10);
+		rot = 0;
+		
+		viewDirection = new Vector4(0, 0, TRANS_SPEED, 0);
 		
 	}
 	
@@ -45,13 +49,13 @@ public class Camera {
 	
 	
 	public void forward() {
-		Vector4 forwardVector = new Vector4(0, 0, 1, 0);
+		Vector4 forwardVector = new Vector4(0, 0, TRANS_SPEED, 0);
 		viewFrame = viewFrame.translate(Matrix4.rotationY(rot).multiply(forwardVector).asPoint3D());
 	
 	}
 	
 	public void backward() {
-		Vector4 backwardVector = new Vector4(0, 0, -1, 0);
+		Vector4 backwardVector = new Vector4(0, 0, -TRANS_SPEED, 0);
 		viewFrame = viewFrame.translate(Matrix4.rotationY(rot).multiply(backwardVector).asPoint3D());
 	}
 	
@@ -75,13 +79,14 @@ public class Camera {
 	public void rotateLeft() {
 		rot -= ROTATION_SPEED;
 		viewFrame = viewFrame.rotateY(ROTATION_SPEED);
-		viewDirection = Matrix4.rotationY(-ROTATION_SPEED).multiply(viewDirection);
+		viewDirection = Matrix4.rotationY(ROTATION_SPEED).multiply(viewDirection);
+		
 		
 	}
 	
 	public void rotateRight() {
 		rot += ROTATION_SPEED;
 		viewFrame = viewFrame.rotateY(-ROTATION_SPEED);
-		viewDirection = Matrix4.rotationY(ROTATION_SPEED).multiply(viewDirection);
+		viewDirection = Matrix4.rotationY(-ROTATION_SPEED).multiply(viewDirection);
 	}
 }

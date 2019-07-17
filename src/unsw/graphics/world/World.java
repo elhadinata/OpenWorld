@@ -56,6 +56,8 @@ public class World extends Application3D implements KeyListener{
 	private Camera camera;
 	
 	private static final boolean LIGHTING = true;
+	private static final boolean TEST = false;
+	
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -80,9 +82,9 @@ public class World extends Application3D implements KeyListener{
 		super.display(gl);
 		
 		// Identity
-		CoordFrame3D frame = camera.frame();//CoordFrame3D.identity().translate(-4,0,-4);
-				
+		
         Shader.setViewMatrix(gl, camera.viewFrame().getMatrix());
+        CoordFrame3D frame = camera.frame();
         
         // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
@@ -120,14 +122,15 @@ public class World extends Application3D implements KeyListener{
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
         
         Shader.setPenColor(gl, Color.WHITE);
-        
-        for(Tree t: terrain.trees()) {
-        	float x = t.getPosition().getX();
-        	float z = t.getPosition().getZ();
-//        	System.out.println(x+" "+z);
-        	CoordFrame3D treeFrame= frame.translate(0,5,0.5f).translate(x, terrain.altitude(x, z), z);
-        	
-        	treeMesh.draw(gl, treeFrame);
+        if(TEST==true) {
+	        for(Tree t: terrain.trees()) {
+	        	float x = t.getPosition().getX();
+	        	float z = t.getPosition().getZ();
+	//        	System.out.println(x+" "+z);
+	        	CoordFrame3D treeFrame= frame.translate(0,5,0.5f).translate(x, terrain.altitude(x, z), z);
+	        	
+	        	treeMesh.draw(gl, treeFrame);
+	        }
         }
         
         
@@ -146,7 +149,7 @@ public class World extends Application3D implements KeyListener{
 		
 		
 		// Identity
-		CoordFrame3D frame = CoordFrame3D.identity().translate(-4,0,-4);
+		CoordFrame3D frame = CoordFrame3D.identity();
 				
 		camera = new Camera(terrain, frame);
 		
@@ -178,7 +181,7 @@ public class World extends Application3D implements KeyListener{
                 indicesBuffer, GL.GL_STATIC_DRAW);
 		
 		initTexture(gl);
-    
+		
 		initTrees();
 		treeMesh.init(gl);
 		
@@ -196,42 +199,83 @@ public class World extends Application3D implements KeyListener{
 		int width = terrain.width();
         int depth = terrain.depth();
         
+        
+        
 		this.vertex= new ArrayList<>();
 
+		
 		
 		//texCoordBuffer = new Point2DBuffer(width*depth);
 		ArrayList<Point2D> texCoord = new ArrayList<>();
 		
-    	for(int z=0; z<width; z++) {
-    		for(int x=0;x <depth ; x++) {
-    			vertex.add(new Point3D(x, terrain.altitude(x, z), z));
-    			texCoord.add(new Point2D(x, z));
-        	}
-        }
+		if(TEST == false) {
+        	width = 100;
+        	depth = 100;
+        	
+        	for(int z=0; z<width; z++) {
+        		for(int x=0;x <depth ; x++) {
+        			vertex.add(new Point3D(x, 0, z));
+        			texCoord.add(new Point2D(x, z));
+            	}
+            }
 
-        this.indices=new ArrayList<>();
-        for(int z=0; z<depth-1; z++) {
-        	for(int x=0; x<width-1; x++) {
-        		
-        		indices.add((x+1)+z*width);	// 1
-        		indices.add(x+(z+1)*width);	// 2
-        		indices.add(x+z*width);		// 0
+            this.indices=new ArrayList<>();
+            for(int z=0; z<depth-1; z++) {
+            	for(int x=0; x<width-1; x++) {
+            		
+            		indices.add((x+1)+z*width);	// 1
+            		indices.add(x+(z+1)*width);	// 2
+            		indices.add(x+z*width);		// 0
 
-        		indices.add((x+1)+(z+1)*width);	// 3
-        		indices.add(x+(z+1)*width); 	// 2
-        		indices.add((x+1)+z*width);		// 0
-        		
-        	}
+            		indices.add((x+1)+(z+1)*width);	// 3
+            		indices.add(x+(z+1)*width); 	// 2
+            		indices.add((x+1)+z*width);		// 0
+            		
+            	}
+            }
+            vertexBuffer = new Point3DBuffer(vertex);
+       
+            texCoordBuffer = new Point2DBuffer(texCoord);
+            
+            int[] array = new int[indices.size()];
+            for(int i = 0; i < indices.size(); i++) 
+            	array[i] = indices.get(i);
+            
+            indicesBuffer = GLBuffers.newDirectIntBuffer(array);
+        	
+        } else {
+        	for(int z=0; z<width; z++) {
+        		for(int x=0;x <depth ; x++) {
+        			vertex.add(new Point3D(x, 0, z));
+        			texCoord.add(new Point2D(x, z));
+            	}
+            }
+
+            this.indices=new ArrayList<>();
+            for(int z=0; z<depth-1; z++) {
+            	for(int x=0; x<width-1; x++) {
+            		
+            		indices.add((x+1)+z*width);	// 1
+            		indices.add(x+(z+1)*width);	// 2
+            		indices.add(x+z*width);		// 0
+
+            		indices.add((x+1)+(z+1)*width);	// 3
+            		indices.add(x+(z+1)*width); 	// 2
+            		indices.add((x+1)+z*width);		// 0
+            		
+            	}
+            }
+            vertexBuffer = new Point3DBuffer(vertex);
+       
+            texCoordBuffer = new Point2DBuffer(texCoord);
+            
+            int[] array = new int[indices.size()];
+            for(int i = 0; i < indices.size(); i++) 
+            	array[i] = indices.get(i);
+            
+            indicesBuffer = GLBuffers.newDirectIntBuffer(array);
         }
-        vertexBuffer = new Point3DBuffer(vertex);
-   
-        texCoordBuffer = new Point2DBuffer(texCoord);
-        
-        int[] array = new int[indices.size()];
-        for(int i = 0; i < indices.size(); i++) 
-        	array[i] = indices.get(i);
-        
-        indicesBuffer = GLBuffers.newDirectIntBuffer(array);
+    	
         
 	}
 	
@@ -263,6 +307,7 @@ public class World extends Application3D implements KeyListener{
 	public void reshape(GL3 gl, int width, int height) {
         super.reshape(gl, width, height);
         Shader.setProjMatrix(gl, Matrix4.perspective(60, width/(float)height, 1, 100));
+	
 	}
 
 	@Override
