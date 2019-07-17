@@ -23,6 +23,7 @@ import unsw.graphics.Point2DBuffer;
 import unsw.graphics.Point3DBuffer;
 import unsw.graphics.Shader;
 import unsw.graphics.Texture;
+import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
 import unsw.graphics.geometry.TriangleMesh;
@@ -101,9 +102,17 @@ public class World extends Application3D implements KeyListener{
         gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
         
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
-//        
+        
+        terrainMesh.draw(gl, frame);
+        
+        Shader.setInt(gl, "tex", 1);
+        gl.glActiveTexture(GL.GL_TEXTURE1);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
+        
         if (LIGHTING) {
-            Shader.setPoint3D(gl, "lightPos", new Point3D(0, -4, 2));
+        	// Set the lighting properties
+        	Vector3 light = terrain.getSunlight();
+            Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
             Shader.setColor(gl, "lightIntensity", Color.WHITE);
             Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 
@@ -113,13 +122,6 @@ public class World extends Application3D implements KeyListener{
             Shader.setColor(gl, "specularCoeff", new Color(0.8f, 0.8f, 0.8f));
             Shader.setFloat(gl, "phongExp", 16f);
         }
-        
-        
-        terrainMesh.draw(gl, frame);
-        
-        Shader.setInt(gl, "tex", 1);
-        gl.glActiveTexture(GL.GL_TEXTURE1);
-        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
         
         Shader.setPenColor(gl, Color.WHITE);
         if(TEST==true) {
@@ -294,8 +296,8 @@ public class World extends Application3D implements KeyListener{
 		textures[1] = new Texture(gl, "res/textures/rock.bmp", "bmp", false);
         
 		if (LIGHTING) {
-			shader = new Shader(gl, "shaders/vertex_tex_phong.glsl",
-                    "shaders/fragment_tex_phong.glsl");
+			shader = new Shader(gl, "shaders/vertex_ass_phong.glsl",
+                    "shaders/fragment_ass_phong.glsl");
         } else {
         	shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
 	                "shaders/fragment_tex_3d.glsl");
