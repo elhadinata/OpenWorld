@@ -147,4 +147,8 @@ public class CoordFrame3D {
     public Vector3 transform(Vector3 v) {
         return matrix.multiply(v.extend()).trim();
     }
+
+    public float getYRotation() {
+    	return (float) Math.asin(matrix.getValues()[2]);
+    }
 }

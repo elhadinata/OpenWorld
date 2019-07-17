@@ -42,6 +42,11 @@ public class Matrix4 {
         return new Matrix4(values);
     }
     
+    public Vector4 phi() {
+		return new Vector4(values[12], values[13], values[14], 0);
+    	
+    }
+    
     /**
      * Create a translation matrix to the given point.
      * @param x The x coordinate of the new origin

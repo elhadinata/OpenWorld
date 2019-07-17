@@ -396,6 +396,8 @@ public class TriangleMesh {
             gl.glDrawArrays(GL3.GL_TRIANGLES, 0, vertices.capacity());
         }
     }
+    
+    
 
     public void destroy(GL3 gl) {
         gl.glDeleteBuffers(4, new int[] { verticesName, indicesName, normalsName, texCoordsName }, 0);

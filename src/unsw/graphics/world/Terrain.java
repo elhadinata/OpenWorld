@@ -3,11 +3,13 @@ package unsw.graphics.world;
 
 
 import java.nio.DoubleBuffer;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
+import unsw.graphics.geometry.Point3D;
 
 
 
@@ -81,7 +83,7 @@ public class Terrain {
      * @param z
      * @return
      */
-    public double getGridAltitude(int x, int z) {
+    public float getGridAltitude(int x, int z) {
         return altitudes[x][z];
     }
 
@@ -105,31 +107,96 @@ public class Terrain {
      * @return
      */
     public float altitude(float x, float z) {
-        double altitude = 0;
+        
+        float alt = 0;
+        int x_floor = (int) Math.floor(x);
+        int x_ceil = (int) Math.ceil(x);
+        
+        int z_floor = (int) Math.floor(z);
+        int z_ceil = (int) Math.ceil(z);
+        
+        if(x_floor == x_ceil && z_floor == z_ceil) {
+        	return getGridAltitude(x_floor, z_floor);
+        }  else if (x_floor == x_ceil && z_floor != z_ceil) {
+        	float t = (z_ceil-z)/(z_ceil-z_floor);
+        	float y1 =  getGridAltitude(x_floor, z_floor);
+        	float y2 =  getGridAltitude(x_ceil, z_ceil);
+        	
+        	return ((1-t)*y1)+((t)*y2);
+        	
+        } else if (x_floor != x_ceil && z_floor == z_ceil) {
+        	float t = (x_ceil-x)/(x_ceil-x_floor);
+        	float y1 =  getGridAltitude(x_floor, z_floor);
+        	float y2 =  getGridAltitude(x_ceil, z_ceil);
+        	
+        	return ((1-t)*y1)+((t)*y2);
+        	
+        }
+        
+//        if(x_floor == z_floor && x_ceil == z_ceil) {
+//        	float y1 =  getGridAltitude(x_floor, z_floor);
+//        	float y2 =  getGridAltitude(x_ceil, z_ceil);
+//        	return (y1+y2)/2;
+//    	}
+        
+        // === Point 1 === //
+        Point3D p1 = new Point3D(x_floor, getGridAltitude(x_floor, z_floor), z_floor);
+        
+        // === Point 2 === //
+        Point3D p2 = new Point3D(x_floor, getGridAltitude(x_floor, z_ceil), z_ceil);
+        
+        // === Point 3 === //
+        Point3D p3 = new Point3D(x_ceil, getGridAltitude(x_ceil, z_floor), z_floor);
+     
+        // === Point 4 === //
+        Point3D p4 = new Point3D(x_ceil, getGridAltitude(x_ceil, z_ceil), z_ceil);
+        
+        float x1 = p1.getX();
+        float y1 = p1.getY();
+        float z1 = p1.getZ();
+        
+        float x2 = p2.getX();
+        float y2 = p2.getY();
+        float z2 = p2.getZ();
+        
+        float x3 = p3.getX();
+        float y3 = p3.getY();
+        float z3 = p3.getZ();
 
-        // TODO: Implement this
-        // use bilinear inter polation
-        int x1 = (int) Math.ceil(x);
-        int x2 = (int) Math.floor(x);
+        float x4 = p4.getX();
+        float y4 = p4.getY();
+        float z4 = p4.getZ();
         
-        int z1 = (int) Math.ceil(z);
-        int z2 = (int) Math.floor(z);
+        float t = (x3-x)/(x3-x1);
+        if(x3==x1) {
+        	t= (z3-z)/(z3-z1);
+        	if(z3==z1) {
+        		System.out.println("DIVISION BY 0 (X3 == X1)");
+        	}
+        }
+        float t1 = (x4-x)/(x4-x2);
         
-        if(x1==x2 && z1==z2) 
-        	return (float) getGridAltitude(x1, z1);
+        float x5 = (t * x1) + ((1-t)*x3);
+        float y5 = (t * y1) + ((1-t)*y3);
+        float z5 = (t * z1) + ((1-t)*z3);
         
-        // now get y1
-        double y1 = getGridAltitude(x1, z1);
-        // get y2
-        double y2 = getGridAltitude(x2, z2);
+        float x6 = (t1*x2) + ((1-t1)*x4);
+        float y6 = (t1*y2) + ((1-t1)*y4);
+        float z6 = (t1*z2) + ((1-t1)*z4);
         
-        float t = x-x2;
         
-        altitude = y1*(1-t) + y2*t;
+        float t2 = (z6-z)/(z6-z5);
+        if(z6 == z5) {
+        	t2 = (z6-z)/(z6-z5);
+        	if(z6==z5 && x6==x5) {
+            	System.out.println("DIVISION BY 0 (X4 == X2)");
+            }
+        }
         
-        System.out.println(altitude);
+        alt = ((1-t2) * y5) + (t2*y6);
+    	
         
-        return (float)altitude;
+        return alt;
     }
 
     /**
