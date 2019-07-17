@@ -31,7 +31,7 @@ public class Camera {
 		// To Set the initial position of camera
 		viewFrameIdentity = CoordFrame3D.identity();
 		viewFrame = viewFrameIdentity;
-		this.frame = frame.translate(10, -0.7f, 10);//.rotateY(135);
+		this.frame = frame.translate(10, -0.7f, 10).rotateY(135);
 		//this.viewFrame = viewFrame.translate(10, -0.7f, 10);
 		rot = 0;
 		
