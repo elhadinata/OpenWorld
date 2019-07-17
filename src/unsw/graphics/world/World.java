@@ -268,11 +268,23 @@ public class World extends Application3D implements KeyListener{
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
-        case KeyEvent.VK_LEFT:
+        case KeyEvent.VK_A:
             camera.left();
             break;
-        case KeyEvent.VK_RIGHT:
+        case KeyEvent.VK_D:
             camera.right();
+            break;
+        case KeyEvent.VK_W:
+            camera.forward();
+            break;
+        case KeyEvent.VK_S:
+            camera.backward();
+            break;
+        case KeyEvent.VK_LEFT:
+            camera.rotateLeft();
+            break;
+        case KeyEvent.VK_RIGHT:
+            camera.rotateRight();
             break;
         case KeyEvent.VK_UP:
             camera.forward();
