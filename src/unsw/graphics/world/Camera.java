@@ -15,18 +15,18 @@ public class Camera {
 	private float rot;
 	private Terrain terrain;
 	
-//	private static final Vector4 UP = new Vector4(0, 1, 0, 0);
 	private static final float ROTATION_SPEED = 2;
 	private Vector4 viewDirection;
 	
 
 	public Camera(Terrain terrain, CoordFrame3D frame) {
-		viewFrame = CoordFrame3D.identity()
-				.translate(-1, -1.5f, -9)
-                .scale(0.75f, 0.75f, 0.75f);
+		
+		// To Set the initial position of camera
 		viewFrameIdentity = CoordFrame3D.identity()
 				.translate(-1, -1.5f, -9)
                 .scale(0.75f, 0.75f, 0.75f);
+		
+		viewFrame = viewFrameIdentity;
 		this.frame = frame;
 		rot = 0;
 		this.terrain = terrain;
@@ -81,7 +81,7 @@ public class Camera {
 	
 	public void rotateRight() {
 		rot += ROTATION_SPEED;
-		viewFrame = viewFrame.rotateY(rot);
+		viewFrame = viewFrame.rotateY(-ROTATION_SPEED);
 		viewDirection = Matrix4.rotationY(ROTATION_SPEED).multiply(viewDirection);
 	}
 }
