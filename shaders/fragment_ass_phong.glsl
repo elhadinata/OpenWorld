@@ -27,9 +27,9 @@ void main()
 {
 	vec3 m_unit = normalize(m);
     // Compute the s, v and r vectors
-    vec3 s = normalize(view_matrix*vec4(lightPos,1) - viewPosition).xyz;
+    vec3 s = normalize(view_matrix*vec4(-lightPos,1) - viewPosition).xyz;
     vec3 v = normalize(-viewPosition.xyz);
-    vec3 r = normalize(reflect(-lightPos,m_unit));
+    vec3 r = normalize(reflect(-s,m_unit));
 
     vec3 ambient = ambientIntensity*ambientCoeff;
     vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);

@@ -18,7 +18,6 @@ uniform mat4 model_matrix;
 uniform mat4 view_matrix;
 
 uniform mat4 proj_matrix;
-
 out vec4 viewPosition;
 out vec3 m;
 
