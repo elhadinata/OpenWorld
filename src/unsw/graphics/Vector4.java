@@ -75,6 +75,16 @@ public class Vector4 {
                 values[2] - v.values[2], values[3] - v.values[3]);
     }
 
+    /** 
+     * Add v from this vector.
+     * @param v
+     * @return
+     */
+    public Vector4 plus(Vector4 v) {
+        return new Vector4(values[0] + v.values[0], values[1] + v.values[1], 
+                values[2] + v.values[2], values[3] + v.values[3]);
+    }
+    
     /**
      * Remove the 4th (w) component
      * @return

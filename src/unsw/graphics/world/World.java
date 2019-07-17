@@ -81,9 +81,9 @@ public class World extends Application3D implements KeyListener{
 		super.display(gl);
 		
 		// Identity
-		CoordFrame3D frame = CoordFrame3D.identity().translate(-3,0,-4);
+		CoordFrame3D frame = camera.frame();//CoordFrame3D.identity().translate(-4,0,-4);
 				
-        Shader.setViewMatrix(gl, camera.frame().getMatrix());
+        Shader.setViewMatrix(gl, camera.viewFrame().getMatrix());
         
         // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
@@ -126,8 +126,8 @@ public class World extends Application3D implements KeyListener{
         for(Tree t: terrain.trees()) {
         	float x = t.getPosition().getX();
         	float z = t.getPosition().getZ();
-        	
-        	CoordFrame3D treeFrame= frame.translate(0,4.9f,0).translate(x, terrain.altitude(x, z), z);
+//        	System.out.println(x+" "+z);
+        	CoordFrame3D treeFrame= frame.translate(0,5,0.5f).translate(x, terrain.altitude(x, z), z);
         	
         	treeMesh.draw(gl, treeFrame);
         }
@@ -147,8 +147,10 @@ public class World extends Application3D implements KeyListener{
 		super.init(gl);
 		
 		
-		
-		camera = new Camera(terrain);
+		// Identity
+		CoordFrame3D frame = CoordFrame3D.identity().translate(-4,0,-4);
+				
+		camera = new Camera(terrain, frame);
 		
 		getWindow().addKeyListener(this);
 		
@@ -159,43 +161,7 @@ public class World extends Application3D implements KeyListener{
         texCoordsName = names[1];
         indicesName = names[2];
 		
-        vertexBuffer =new Point3DBuffer(Arrays.asList(
-        		new Point3D(-1,-1,1), 
-                new Point3D(-1,1,1),
-                new Point3D(1,-1,1), 
-                new Point3D(1,1,1),
-                new Point3D(1,-1,-1), 
-                new Point3D(1,1,-1),
-                new Point3D(-1,-1,-1), 
-                new Point3D(-1,1,-1),
-                new Point3D(-1,-1,1),  //Repeating the starting vertices 
-                new Point3D(-1,1,1))); 
-        
-        
-        texCoordBuffer = new Point2DBuffer(Arrays.asList(
-        		new Point2D(0,0),
-                new Point2D(0,1f),
-                new Point2D(0.25f,0),
-                new Point2D(0.25f,1f),
-                new Point2D(0.5f,0),
-                new Point2D(0.5f,1f),
-                new Point2D(0.75f,0),
-                new Point2D(0.75f,1f),
-                new Point2D(1,0),
-                new Point2D(1,1f)));
-        
-        indicesBuffer = GLBuffers.newDirectIntBuffer(new int[] {
-        		0,2,1,
-                1,2,3,
-                2,4,3,
-                3,4,5,
-                4,6,5,
-                5,6,7,
-                6,8,7,
-                7,8,9,
-                
-            });
-//        
+
 		// Terrain
 		initTerrain();
 		terrainMesh = new TriangleMesh(vertex, indices,true);
@@ -238,8 +204,8 @@ public class World extends Application3D implements KeyListener{
 		//texCoordBuffer = new Point2DBuffer(width*depth);
 		ArrayList<Point2D> texCoord = new ArrayList<>();
 		
-    	for(int z=0; z<10; z++) {
-    		for(int x=0;x <10 ; x++) {
+    	for(int z=0; z<width; z++) {
+    		for(int x=0;x <depth ; x++) {
     			vertex.add(new Point3D(x, terrain.altitude(x, z), z));
     			texCoord.add(new Point2D(x, z));
         	}
@@ -304,11 +270,23 @@ public class World extends Application3D implements KeyListener{
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
-        case KeyEvent.VK_LEFT:
+        case KeyEvent.VK_A:
             camera.left();
             break;
-        case KeyEvent.VK_RIGHT:
+        case KeyEvent.VK_D:
             camera.right();
+            break;
+        case KeyEvent.VK_W:
+            camera.forward();
+            break;
+        case KeyEvent.VK_S:
+            camera.backward();
+            break;
+        case KeyEvent.VK_LEFT:
+            camera.rotateLeft();
+            break;
+        case KeyEvent.VK_RIGHT:
+            camera.rotateRight();
             break;
         case KeyEvent.VK_UP:
             camera.forward();
