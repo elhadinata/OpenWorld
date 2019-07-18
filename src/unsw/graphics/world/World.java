@@ -57,7 +57,7 @@ public class World extends Application3D implements KeyListener{
 	private Camera camera;
 	
 	private static final boolean LIGHTING = true;
-	private static final boolean TEST = false;
+	private static final boolean TEST = true;
 	
 	
     public World(Terrain terrain) {
@@ -107,14 +107,14 @@ public class World extends Application3D implements KeyListener{
         
         Shader.setInt(gl, "tex", 1);
         gl.glActiveTexture(GL.GL_TEXTURE1);
-        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId()); // causes terrain to lose texture
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId());
         
         if (LIGHTING) {
         	// Set the lighting properties
-        	Vector3 light = terrain.getSunlight();
+        	Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
             Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
             Shader.setColor(gl, "lightIntensity", Color.WHITE);
-            Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
+            Shader.setColor(gl, "ambientIntensity", new Color(0.5f, 0.5f, 0.5f));
 
             // Set the material properties
             Shader.setColor(gl, "ambientCoeff", Color.WHITE);
@@ -248,7 +248,7 @@ public class World extends Application3D implements KeyListener{
         } else {
         	for(int z=0; z<width; z++) {
         		for(int x=0;x <depth ; x++) {
-        			vertex.add(new Point3D(x, 0, z));
+        			vertex.add(new Point3D(x, terrain.altitude(x, z), z));
         			texCoord.add(new Point2D(x, z));
             	}
             }
