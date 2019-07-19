@@ -34,7 +34,7 @@ public class ModelViewer extends Application3D {
     
     private static final boolean USE_TEXTURE = true;
     
-    private static final boolean USE_CUBEMAP = false; //Lighting must also be on
+    private static final boolean USE_CUBEMAP = true; //Lighting must also be on
 
     private float rotateY;
 
@@ -122,8 +122,8 @@ public class ModelViewer extends Application3D {
 
         // Compute the view transform
         CoordFrame3D view = CoordFrame3D.identity().translate(0, 0, -2)
-                // Uncomment the line below to rotate the camera
-//                 .rotateY(rotateY)
+//                 Uncomment the line below to rotate the camera
+                 .rotateY(rotateY)
                 .translate(0, 0, 2);
         Shader.setViewMatrix(gl, view.getMatrix());
 

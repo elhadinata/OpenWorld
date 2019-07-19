@@ -77,16 +77,16 @@ public class Camera {
 	}
 	
 	public void rotateLeft() {
-		rot -= ROTATION_SPEED;
-		viewFrame = viewFrame.rotateY(ROTATION_SPEED);
+		rot += ROTATION_SPEED;
+		viewFrame = viewFrame.rotateY(-ROTATION_SPEED);
 		viewDirection = Matrix4.rotationY(ROTATION_SPEED).multiply(viewDirection);
-		
+		// float rotation = (float) Math.sin((double)90-rot*Math.PI * 360);
 		
 	}
 	
 	public void rotateRight() {
-		rot += ROTATION_SPEED;
-		viewFrame = viewFrame.rotateY(-ROTATION_SPEED);
+		rot -= ROTATION_SPEED;
+		viewFrame = viewFrame.rotateY(ROTATION_SPEED);
 		viewDirection = Matrix4.rotationY(-ROTATION_SPEED).multiply(viewDirection);
 	}
 }

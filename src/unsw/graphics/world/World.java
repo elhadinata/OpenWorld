@@ -41,29 +41,53 @@ public class World extends Application3D implements KeyListener{
 	private List<Point3D>  vertex;
 	private List<Integer> indices;
 	
+	// Terrain, Tree Mesh
 	private TriangleMesh treeMesh;
 	private TriangleMesh terrainMesh;
+	private TriangleMesh skyMesh;
+	private TriangleMesh world;
+	
 	private Texture textures[];
 	
+	
+	// Terrain Texture buffer
 	private Point3DBuffer vertexBuffer;
     private Point2DBuffer texCoordBuffer;
     private IntBuffer indicesBuffer;
+    
+    // Texture buffer ids/names
     private int verticesName;
     private int texCoordsName;
     private int indicesName;
 	
+    
 	private Shader shader;
 	
 	private Camera camera;
 	
-	private static final boolean LIGHTING = true;
+	/* Properties
+	*	If TEST == true then it will print a large flat surface, to
+	*	test directional lighting and camera
+	*
+	*	If LIGHTING == true then Day and Night Texture will be used
+	*	IF DAY == true -> use Sky texture
+	*	ELSE -> use Night texture
+	*/
+	private static boolean LIGHTING = true;
+	private static boolean DAY = true;
 	private static final boolean TEST = true;
 	
+	private static final Color NIGHT_COLOR = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
         this.terrain = terrain;
-   
+        try {
+			this.world = new TriangleMesh("res/models/cube_normals.ply", true, true);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
    
     /**
@@ -87,7 +111,9 @@ public class World extends Application3D implements KeyListener{
         Shader.setViewMatrix(gl, camera.viewFrame().getMatrix());
         CoordFrame3D frame = camera.frame();
         
+        
         // Set Terrain Texture
+        
         Shader.setInt(gl, "tex", 0);
         gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[0].getId());
@@ -105,38 +131,65 @@ public class World extends Application3D implements KeyListener{
         
         terrainMesh.draw(gl, frame);
         
+        // Set tree Texture
         Shader.setInt(gl, "tex", 1);
         gl.glActiveTexture(GL.GL_TEXTURE1);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId());
         
         if (LIGHTING) {
+        	if (DAY) {
+    		setBackground(Color.WHITE);
         	// Set the lighting properties
         	Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
             Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
             Shader.setColor(gl, "lightIntensity", Color.WHITE);
-            Shader.setColor(gl, "ambientIntensity", new Color(0.5f, 0.5f, 0.5f));
+            Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 
             // Set the material properties
             Shader.setColor(gl, "ambientCoeff", Color.WHITE);
             Shader.setColor(gl, "diffuseCoeff", new Color(1f, 1f, 1f));
             Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
             Shader.setFloat(gl, "phongExp", 128f);
-        }
+        	} else {
+        		
+        		setBackground(NIGHT_COLOR);
+        		Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
+                Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
+                Shader.setColor(gl, "lightIntensity", Color.WHITE);
+                Shader.setColor(gl, "ambientIntensity", new Color(0.0f, 0.0f, 0.0f));
+
+                // Set the material properties
+                Shader.setColor(gl, "ambientCoeff", Color.WHITE);
+                Shader.setColor(gl, "diffuseCoeff", new Color(0.7f, 0.7f, 0.7f));
+                Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
+                Shader.setFloat(gl, "phongExp", 128f);
+        	}
+    	}
         
         Shader.setPenColor(gl, Color.WHITE);
         if(TEST==true) {
 	        for(Tree t: terrain.trees()) {
 	        	float x = t.getPosition().getX();
 	        	float z = t.getPosition().getZ();
-	//        	System.out.println(x+" "+z);
 	        	CoordFrame3D treeFrame= frame.translate(0,5,0.5f).translate(x, terrain.altitude(x, z), z);
 	        	
 	        	treeMesh.draw(gl, treeFrame);
 	        }
         }
         
+//        
+
         
-        
+//        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[2].getId());
+//        skyMesh.draw(gl);
+
+//      // Set Cube texture
+//      Shader.setInt(gl, "tex", 3);
+//      gl.glActiveTexture(GL.GL_TEXTURE0);
+//      gl.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, textures[3].getId());
+//      Shader.setPenColor(gl, Color.BLUE);
+//      world.draw(gl, frame.scale(-10, -10, -10));
+        	
 	}
 
 	@Override
@@ -166,27 +219,11 @@ public class World extends Application3D implements KeyListener{
 		
 
 		// Terrain
-		initTerrain();
-		terrainMesh = new TriangleMesh(vertex, indices,true);
-		terrainMesh.init(gl);
-    
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
-        gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer.capacity() * 3 * Float.BYTES,
-                vertexBuffer.getBuffer(), GL.GL_STATIC_DRAW);
-        
-        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
-        gl.glBufferData(GL.GL_ARRAY_BUFFER, texCoordBuffer.capacity() * 2 * Float.BYTES,
-                texCoordBuffer.getBuffer(), GL.GL_STATIC_DRAW);
-       
-        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
-        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.capacity() * Integer.BYTES,
-                indicesBuffer, GL.GL_STATIC_DRAW);
-		
+		initTerrain(gl);
 		initTexture(gl);
-		
-		initTrees();
-		treeMesh.init(gl);
-		
+		initTrees(gl);
+//		initSky(gl);
+		world.init(gl);
 //		gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL3.GL_LINE); // DRAW OUTLINE ONLY
 		gl.glDisable(GL.GL_CULL_FACE);
 		
@@ -197,17 +234,11 @@ public class World extends Application3D implements KeyListener{
 
 	
 	// Set all the indices and vertices for terrain
-	private void initTerrain() {
+	private void initTerrain(GL3 gl) {
 		int width = terrain.width();
         int depth = terrain.depth();
-        
-        
-        
 		this.vertex= new ArrayList<>();
 
-		
-		
-		//texCoordBuffer = new Point2DBuffer(width*depth);
 		ArrayList<Point2D> texCoord = new ArrayList<>();
 		
 		if(TEST == false) {
@@ -277,32 +308,80 @@ public class World extends Application3D implements KeyListener{
             
             indicesBuffer = GLBuffers.newDirectIntBuffer(array);
         }
-    	
+		terrainMesh = new TriangleMesh(vertex, indices,true);
+		terrainMesh.init(gl);
+    
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
+        gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer.capacity() * 3 * Float.BYTES,
+                vertexBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+        
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
+        gl.glBufferData(GL.GL_ARRAY_BUFFER, texCoordBuffer.capacity() * 2 * Float.BYTES,
+                texCoordBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+       
+        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
+        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer.capacity() * Integer.BYTES,
+                indicesBuffer, GL.GL_STATIC_DRAW);
+		
         
 	}
 	
-	private void initTrees() {
+	private void initTrees(GL3 gl) {
 		try {
 			this.treeMesh = new TriangleMesh("res/models/tree.ply", true, true);
+			treeMesh.init(gl);
 		} catch (IOException e) {
 			System.out.println("Error reading tree.ply");
 			e.printStackTrace();
 		}
 	}
 	
+	private void initSky(GL3 gl) {
+		List<Point3D> skyVerts = new ArrayList<>();
+        skyVerts.add(new Point3D(100, 0, 100));
+        skyVerts.add(new Point3D(-100, 0, 100));
+        skyVerts.add(new Point3D(100, 120, -100));
+        skyVerts.add(new Point3D(-100, 120, -100));
+
+        List<Point2D> skyTexCoords = new ArrayList<>();
+        skyTexCoords.add(new Point2D(0, 0));
+        skyTexCoords.add(new Point2D(1, 0));
+        skyTexCoords.add(new Point2D(1, 1));
+        skyTexCoords.add(new Point2D(0, 1));
+
+        List<Integer> skyIndices = Arrays.asList(0,1,2, 0,2,3);
+
+        this.skyMesh = new TriangleMesh(skyVerts, skyIndices, false, skyTexCoords);
+        this.skyMesh.init(gl);
+	}
+	
 	private void initTexture(GL3 gl) {
-		textures = new Texture[3];
+		textures = new Texture[4];
 		textures[0] = new Texture(gl, "res/textures/cartoon_grass.jpg", "jpg", false);
 		textures[1] = new Texture(gl, "res/textures/rock.bmp", "bmp", false);
+        textures[2] = new Texture(gl, "res/textures/sky.bmp", "bmp", false);
+		textures[3] = new Texture(gl, "res/textures/darkskies/darkskies_lf.png",
+                    "res/textures/darkskies/darkskies_rt.png",
+                    "res/textures/darkskies/darkskies_dn.png",
+                    "res/textures/darkskies/darkskies_up.png",
+                    "res/textures/darkskies/darkskies_ft.png",
+                    "res/textures/darkskies/darkskies_bk.png", "png", false);
         
-		if (LIGHTING) {
+        if (LIGHTING) {
 			shader = new Shader(gl, "shaders/vertex_ass_phong.glsl",
                     "shaders/fragment_ass_phong.glsl");
+//        	shader = new Shader(gl, "shaders/vertex_phong.glsl",
+//                    "shaders/fragment_cubemap.glsl");
         } else {
         	shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
 	                "shaders/fragment_tex_3d.glsl");
         }
 		shader.use(gl);
+	}
+	
+	private void toggleTime() {
+		DAY = DAY ^ true;
+		System.out.println("Day = "+DAY);
 	}
 	
 	@Override
@@ -339,6 +418,11 @@ public class World extends Application3D implements KeyListener{
         case KeyEvent.VK_DOWN:
             camera.backward();
             break;
+        case KeyEvent.VK_L:
+            // Toggle light
+        	toggleTime();
+            break;
+        
         default:
             break;
         }
