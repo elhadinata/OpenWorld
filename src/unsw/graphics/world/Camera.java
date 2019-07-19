@@ -2,18 +2,22 @@ package unsw.graphics.world;
 
 
 
+import java.awt.image.SinglePixelPackedSampleModel;
+
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
 import unsw.graphics.Vector4;
 import unsw.graphics.examples.sailing.objects.Mouse;
 import unsw.graphics.geometry.Point3D;
+import unsw.graphics.scene.MathUtil;
 
 public class Camera {
-	private CoordFrame3D viewFrame;
-	private CoordFrame3D viewFrameIdentity;
-	private CoordFrame3D frame;
 	
-	private float rot;
+	private float rotation;
+	
+	private float x;
+	private float z;
+	
 	private Terrain terrain;
 	
 	private static final float ROTATION_SPEED = 5;
@@ -22,71 +26,45 @@ public class Camera {
 	private Vector4 viewDirection;
 	
 
-	public Camera(Terrain terrain, CoordFrame3D frame) {
+	public Camera(Terrain terrain) {
 		
 		
 		this.terrain = terrain;
-		
-		
-		// To Set the initial position of camera
-		viewFrameIdentity = CoordFrame3D.identity();
-		viewFrame = viewFrameIdentity;
-		this.frame = frame.translate(5, -0.7f, -5).rotateY(180);
-		//this.viewFrame = viewFrame.translate(10, -0.7f, 10);
-		rot = 0;
-		
-		viewDirection = new Vector4(0, 0, TRANS_SPEED, 0);
-		
+		this.rotation = 0;
+		this.viewDirection = new Vector4(0, 0, TRANS_SPEED, 0);
+		this.x = 0;
+		this.z = 0;
 	}
 	
-	
-	public CoordFrame3D viewFrame() {
-		return viewFrame;
+	public float x() {
+		return this.x;
 	}
-	public CoordFrame3D frame() {
-		return frame;
+	public float z() {
+		return this.z;
 	}
-	
+	public float rotation() {
+		return rotation;
+	}
 	
 	public void forward() {
-		Vector4 forwardVector = new Vector4(0, 0, TRANS_SPEED, 0);
-		viewFrame = viewFrame.translate(Matrix4.rotationY(rot).multiply(forwardVector).asPoint3D());
-	
+		z -= 1;//(float) (Math.cos(Math.toRadians(MathUtil.normaliseAngle(rotation)))*TRANS_SPEED);
+		x -= 1;//(float) (Math.sin(Math.toRadians(MathUtil.normaliseAngle(rotation)))*TRANS_SPEED);
 	}
 	
 	public void backward() {
-		Vector4 backwardVector = new Vector4(0, 0, -TRANS_SPEED, 0);
-		viewFrame = viewFrame.translate(Matrix4.rotationY(rot).multiply(backwardVector).asPoint3D());
+		z += 1;//(float) (Math.cos(Math.toRadians(MathUtil.normaliseAngle(rotation)))*TRANS_SPEED);
+		x += 1;//(float) (Math.sin(Math.toRadians(MathUtil.normaliseAngle(rotation)))*TRANS_SPEED);
 	}
 	
-	public void left() {
-		Matrix4 sideDirection = Matrix4.translation(1, 0, 0);
-		
-		Vector4 p =  Matrix4.rotationY(rot).multiply(sideDirection.phi());
-		viewFrame = viewFrame.translate(p.asPoint3D());	
-
-		viewDirection = Matrix4.rotationY(rot).multiply(sideDirection.phi());
-	}
-	public void right() {
-		Matrix4 sideDirection = Matrix4.translation(-1, 0, 0);
-		
-		Vector4 p =  Matrix4.rotationY(rot).multiply(sideDirection.phi());
-		viewFrame = viewFrame.translate(p.asPoint3D());	
-
-		viewDirection = Matrix4.rotationY(rot).multiply(sideDirection.phi());
-	}
+	public void left() {}
+	public void right() {}
 	
 	public void rotateLeft() {
-		rot += ROTATION_SPEED;
-		viewFrame = viewFrame.rotateY(-ROTATION_SPEED);
-		viewDirection = Matrix4.rotationY(ROTATION_SPEED).multiply(viewDirection);
-		// float rotation = (float) Math.sin((double)90-rot*Math.PI * 360);
+		this.rotation += ROTATION_SPEED;
 		
 	}
 	
 	public void rotateRight() {
-		rot -= ROTATION_SPEED;
-		viewFrame = viewFrame.rotateY(ROTATION_SPEED);
-		viewDirection = Matrix4.rotationY(-ROTATION_SPEED).multiply(viewDirection);
+		this.rotation -= ROTATION_SPEED;
 	}
 }

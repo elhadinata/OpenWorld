@@ -27,6 +27,7 @@ import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
 import unsw.graphics.geometry.TriangleMesh;
+import unsw.graphics.scene.MathUtil;
 
 
 
@@ -63,7 +64,10 @@ public class World extends Application3D implements KeyListener{
     
 	private Shader shader;
 	
-	private Camera camera;
+	// Get Camera translation
+	float x;
+	float z;
+	float rotation;
 	
 	/* Properties
 	*	If TEST == true then it will print a large flat surface, to
@@ -76,7 +80,7 @@ public class World extends Application3D implements KeyListener{
 	private static boolean LIGHTING = true;
 	private static boolean DAY = true;
 	private static final boolean TEST = true;
-	
+	public static final float INIT_ROTATION = 135;
 	private static final Color NIGHT_COLOR = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 	
     public World(Terrain terrain) {
@@ -106,10 +110,15 @@ public class World extends Application3D implements KeyListener{
 	public void display(GL3 gl) {
 		super.display(gl);
 		
+		CoordFrame3D viewFrame = CoordFrame3D.identity();
+		System.out.println((x)+" "+(z));
 		// Identity
-		
-        Shader.setViewMatrix(gl, camera.viewFrame().getMatrix());
-        CoordFrame3D frame = camera.frame();
+		if(-x <= terrain.width()-1 && -z <= terrain.depth()-1 && z<=0 && x<=0) {
+			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f-(terrain.altitude(-x, -z)), z).getMatrix());
+		} else {
+			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f, z).getMatrix());
+		}
+		CoordFrame3D modelFrame = CoordFrame3D.identity().translate(0, 0, 0);
         
         
         // Set Terrain Texture
@@ -129,7 +138,7 @@ public class World extends Application3D implements KeyListener{
         
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
         
-        terrainMesh.draw(gl, frame);
+        terrainMesh.draw(gl, modelFrame);
         
         // Set tree Texture
         Shader.setInt(gl, "tex", 1);
@@ -169,9 +178,9 @@ public class World extends Application3D implements KeyListener{
         Shader.setPenColor(gl, Color.WHITE);
         if(TEST==true) {
 	        for(Tree t: terrain.trees()) {
-	        	float x = t.getPosition().getX();
-	        	float z = t.getPosition().getZ();
-	        	CoordFrame3D treeFrame= frame.translate(0,5,0.5f).translate(x, terrain.altitude(x, z), z);
+	        	float tx = t.getPosition().getX();
+	        	float tz = t.getPosition().getZ();
+	        	CoordFrame3D treeFrame= modelFrame.translate(0,5,0.5f).translate(tx, terrain.altitude(tx, tz), tz);
 	        	
 	        	treeMesh.draw(gl, treeFrame);
 	        }
@@ -202,12 +211,7 @@ public class World extends Application3D implements KeyListener{
 	public void init(GL3 gl) {
 		super.init(gl);
 		
-		
-		// Identity
-		CoordFrame3D frame = CoordFrame3D.identity();
-				
-		camera = new Camera(terrain, frame);
-		
+		rotation = INIT_ROTATION;
 		getWindow().addKeyListener(this);
 		
 		int[] names = new int[3];
@@ -394,29 +398,25 @@ public class World extends Application3D implements KeyListener{
 	@Override
 	public void keyPressed(KeyEvent e) {
 		switch (e.getKeyCode()) {
-        case KeyEvent.VK_A:
-            camera.left();
-            break;
-        case KeyEvent.VK_D:
-            camera.right();
-            break;
-        case KeyEvent.VK_W:
-            camera.forward();
-            break;
-        case KeyEvent.VK_S:
-            camera.backward();
-            break;
+        
         case KeyEvent.VK_LEFT:
-            camera.rotateLeft();
+        	rotation -= 5;
             break;
         case KeyEvent.VK_RIGHT:
-            camera.rotateRight();
+        	rotation += 5;
             break;
         case KeyEvent.VK_UP:
-            camera.forward();
-            break;
+        	x -= Math.sin(rotation * Math.PI/180);
+            z += Math.cos(rotation * Math.PI/180);
+//            System.out.println("x: "+x+" "+Math.cos(rotation * Math.PI/180));
+//            System.out.println("z: "+z+" "+Math.sin(rotation * Math.PI/180));
+            
+          break;
         case KeyEvent.VK_DOWN:
-            camera.backward();
+            x += Math.sin(rotation * Math.PI/180);
+            z -= Math.cos(rotation * Math.PI/180);
+//            System.out.println("x: "+x+" "+Math.cos(rotation * Math.PI/180));
+//            System.out.println("z: "+z+" "+Math.sin(rotation * Math.PI/180));
             break;
         case KeyEvent.VK_L:
             // Toggle light
