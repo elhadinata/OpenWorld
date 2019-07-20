@@ -115,6 +115,7 @@ public class Terrain {
         int z_floor = (int) Math.floor(z);
         int z_ceil = (int) Math.ceil(z);
         
+        // Cases where floor(x)=ceil(x) only need linear interpolation
         if(x_floor == x_ceil && z_floor == z_ceil) {
         	return getGridAltitude(x_floor, z_floor);
         }  else if (x_floor == x_ceil && z_floor != z_ceil) {
@@ -124,7 +125,9 @@ public class Terrain {
         	
         	return ((1-t)*y1)+((t)*y2);
         	
-        } else if (x_floor != x_ceil && z_floor == z_ceil) {
+        } 
+        // Cases where floor(z)=ceil(z) only need linear interpolation
+        else if (x_floor != x_ceil && z_floor == z_ceil) {
         	float t = (x_ceil-x)/(x_ceil-x_floor);
         	float y1 =  getGridAltitude(x_floor, z_floor);
         	float y2 =  getGridAltitude(x_ceil, z_ceil);
@@ -133,11 +136,6 @@ public class Terrain {
         	
         }
         
-//        if(x_floor == z_floor && x_ceil == z_ceil) {
-//        	float y1 =  getGridAltitude(x_floor, z_floor);
-//        	float y2 =  getGridAltitude(x_ceil, z_ceil);
-//        	return (y1+y2)/2;
-//    	}
         
         // === Point 1 === //
         Point3D p1 = new Point3D(x_floor, getGridAltitude(x_floor, z_floor), z_floor);

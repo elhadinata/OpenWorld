@@ -42,6 +42,10 @@ public class Matrix4 {
         return new Matrix4(values);
     }
     
+    /**
+     * Return a Vector4 with the values of phi
+     * @return
+     */
     public Vector4 phi() {
 		return new Vector4(values[12], values[13], values[14], 0);
     	

@@ -148,7 +148,4 @@ public class CoordFrame3D {
         return matrix.multiply(v.extend()).trim();
     }
 
-    public float getYRotation() {
-    	return (float) Math.asin(matrix.getValues()[2]);
-    }
 }

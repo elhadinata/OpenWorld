@@ -111,8 +111,8 @@ public class World extends Application3D implements KeyListener{
 		super.display(gl);
 		
 		CoordFrame3D viewFrame = CoordFrame3D.identity();
-		System.out.println((x)+" "+(z));
-		// Identity
+//		System.out.println((x)+" "+(z));
+		// Check if camera is within the terrain, if it is then add altitude
 		if(-x <= terrain.width()-1 && -z <= terrain.depth()-1 && z<=0 && x<=0) {
 			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f-(terrain.altitude(-x, -z)), z).getMatrix());
 		} else {
@@ -122,14 +122,12 @@ public class World extends Application3D implements KeyListener{
         
         
         // Set Terrain Texture
-        
         Shader.setInt(gl, "tex", 0);
         gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[0].getId());
-      
         Shader.setPenColor(gl, Color.WHITE);
         
-        // DRAW the texture according to 
+        // Draw the texture according to the supplied vertices and indices
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
         gl.glVertexAttribPointer(Shader.POSITION, 3, GL.GL_FLOAT, false, 0, 0);
         
@@ -137,13 +135,14 @@ public class World extends Application3D implements KeyListener{
         gl.glVertexAttribPointer(Shader.TEX_COORD, 2, GL.GL_FLOAT, false, 0, 0);
         
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
-        
+      
         terrainMesh.draw(gl, modelFrame);
         
         // Set tree Texture
         Shader.setInt(gl, "tex", 1);
         gl.glActiveTexture(GL.GL_TEXTURE1);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId());
+        Shader.setPenColor(gl, Color.WHITE);
         
         if (LIGHTING) {
         	if (DAY) {
@@ -175,7 +174,7 @@ public class World extends Application3D implements KeyListener{
         	}
     	}
         
-        Shader.setPenColor(gl, Color.WHITE);
+        // If in test mode then draw the trees
         if(TEST==true) {
 	        for(Tree t: terrain.trees()) {
 	        	float tx = t.getPosition().getX();
@@ -186,19 +185,6 @@ public class World extends Application3D implements KeyListener{
 	        }
         }
         
-//        
-
-        
-//        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[2].getId());
-//        skyMesh.draw(gl);
-
-//      // Set Cube texture
-//      Shader.setInt(gl, "tex", 3);
-//      gl.glActiveTexture(GL.GL_TEXTURE0);
-//      gl.glBindTexture(GL.GL_TEXTURE_CUBE_MAP, textures[3].getId());
-//      Shader.setPenColor(gl, Color.BLUE);
-//      world.draw(gl, frame.scale(-10, -10, -10));
-        	
 	}
 
 	@Override
@@ -222,12 +208,13 @@ public class World extends Application3D implements KeyListener{
         indicesName = names[2];
 		
 
-		// Terrain
+		// Inialisation
 		initTerrain(gl);
 		initTexture(gl);
 		initTrees(gl);
 //		initSky(gl);
-		world.init(gl);
+//		world.init(gl);
+		
 //		gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL3.GL_LINE); // DRAW OUTLINE ONLY
 		gl.glDisable(GL.GL_CULL_FACE);
 		
@@ -244,7 +231,7 @@ public class World extends Application3D implements KeyListener{
 		this.vertex= new ArrayList<>();
 
 		ArrayList<Point2D> texCoord = new ArrayList<>();
-		
+		// If not in test mode, generate a 100x100 flat surfact
 		if(TEST == false) {
         	width = 100;
         	depth = 100;
@@ -330,6 +317,7 @@ public class World extends Application3D implements KeyListener{
         
 	}
 	
+	// Prepare the trees
 	private void initTrees(GL3 gl) {
 		try {
 			this.treeMesh = new TriangleMesh("res/models/tree.ply", true, true);
@@ -359,6 +347,8 @@ public class World extends Application3D implements KeyListener{
         this.skyMesh.init(gl);
 	}
 	
+	
+	// Prepare the textures
 	private void initTexture(GL3 gl) {
 		textures = new Texture[4];
 		textures[0] = new Texture(gl, "res/textures/cartoon_grass.jpg", "jpg", false);
@@ -407,16 +397,11 @@ public class World extends Application3D implements KeyListener{
             break;
         case KeyEvent.VK_UP:
         	x -= Math.sin(rotation * Math.PI/180);
-            z += Math.cos(rotation * Math.PI/180);
-//            System.out.println("x: "+x+" "+Math.cos(rotation * Math.PI/180));
-//            System.out.println("z: "+z+" "+Math.sin(rotation * Math.PI/180));
-            
-          break;
+            z += Math.cos(rotation * Math.PI/180);            
+            break;
         case KeyEvent.VK_DOWN:
             x += Math.sin(rotation * Math.PI/180);
             z -= Math.cos(rotation * Math.PI/180);
-//            System.out.println("x: "+x+" "+Math.cos(rotation * Math.PI/180));
-//            System.out.println("z: "+z+" "+Math.sin(rotation * Math.PI/180));
             break;
         case KeyEvent.VK_L:
             // Toggle light
