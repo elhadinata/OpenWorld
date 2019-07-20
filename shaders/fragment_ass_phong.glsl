@@ -37,9 +37,9 @@ void main()
     vec3 specular;
 
     // Only show specular reflections for the front face
-    if (dot(m_unit,s) > 0)
-        specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
-    else
+    //if (dot(m_unit,s) > 0)
+    //    specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
+    //else
         specular = vec3(0);
 
     vec4 ambientAndDiffuse = vec4(ambient + diffuse, 1);
