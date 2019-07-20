@@ -33,8 +33,15 @@ import unsw.graphics.scene.MathUtil;
 
 /**
  * COMMENT: Comment Game 
- *
- * @author malcolmr
+ * Implemented the terrain properly, working bilinear interpolation
+ * Camera fully working
+ * Textured Mesh and Trees
+ * Directional Lighting
+ * Day Night toggle with keypress "L" <- partially implemented
+ * Added Test 8
+ * Test and Normal Mode, 
+ * if TEST==false then will generate 100x100 terrain without trees instead
+ * 
  */
 public class World extends Application3D implements KeyListener{
 
