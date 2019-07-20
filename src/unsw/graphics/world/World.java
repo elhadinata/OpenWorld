@@ -217,8 +217,8 @@ public class World extends Application3D implements KeyListener{
 
 		// Inialisation
 		initTerrain(gl);
-		initTexture(gl);
 		initTrees(gl);
+		initTexture(gl);
 //		initSky(gl);
 //		world.init(gl);
 		
