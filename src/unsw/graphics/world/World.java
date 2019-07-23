@@ -156,7 +156,8 @@ public class World extends Application3D implements KeyListener{
     		setBackground(Color.WHITE);
         	// Set the lighting properties
         	Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
-            Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
+            Shader.setPoint3D(gl, "lightDir", new Point3D(light.getX(),light.getY(),light.getZ()));
+            //Shader.setPoint3D(gl, "lightDir", new Point3D(-1,-1,0));
             Shader.setColor(gl, "lightIntensity", Color.WHITE);
             Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 
@@ -168,7 +169,7 @@ public class World extends Application3D implements KeyListener{
         	} else {
         		
         		setBackground(NIGHT_COLOR);
-        		Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
+        		Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));x
                 Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
                 Shader.setColor(gl, "lightIntensity", Color.WHITE);
                 Shader.setColor(gl, "ambientIntensity", new Color(0.0f, 0.0f, 0.0f));
