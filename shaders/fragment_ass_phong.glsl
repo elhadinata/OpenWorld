@@ -6,7 +6,7 @@ uniform vec4 input_color;
 uniform mat4 view_matrix;
 
 // Light properties
-uniform vec3 lightPos;
+uniform vec3 lightDir;
 uniform vec3 lightIntensity;
 uniform vec3 ambientIntensity;
 
@@ -28,7 +28,7 @@ void main()
 	vec3 m_unit = normalize(m);
     // Compute the s, v and r vectors
 	// Use directional light
-    vec3 s = normalize(view_matrix*vec4(lightPos,0) + viewPosition).xyz;
+    vec3 s = normalize(view_matrix*vec4(lightDir,0)).xyz;
     vec3 v = normalize(-viewPosition.xyz);
     vec3 r = normalize(reflect(-s,m_unit));
 
@@ -36,10 +36,10 @@ void main()
     vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
     vec3 specular;
 
-    // Only show specular reflections for the front face
-    //if (dot(m_unit,s) > 0)
-    //    specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
-    //else
+    //Only show specular reflections for the front face
+    if (dot(m_unit,s) > 0)
+        specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
+    else
         specular = vec3(0);
 
     vec4 ambientAndDiffuse = vec4(ambient + diffuse, 1);

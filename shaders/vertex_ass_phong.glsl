@@ -34,7 +34,7 @@ void main() {
     gl_Position = proj_matrix * viewPosition;
 
     // Compute the normal in view coordinates
-    m = normalize(model_matrix * vec4(normal, 0)).xyz;
+    m = normalize(view_matrix*model_matrix * vec4(normal, 0)).xyz;
 
     texCoordFrag = texCoord;
 }
