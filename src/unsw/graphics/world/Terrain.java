@@ -115,6 +115,7 @@ public class Terrain {
         int z_floor = (int) Math.floor(z);
         int z_ceil = (int) Math.ceil(z);
         
+        
         // Cases where floor(x)=ceil(x) only need linear interpolation
         if(x_floor == x_ceil && z_floor == z_ceil) {
         	return getGridAltitude(x_floor, z_floor);
