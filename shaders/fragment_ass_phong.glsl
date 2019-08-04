@@ -40,7 +40,7 @@ void main()
 		vec3 m_unit = normalize(m);
 	    // Compute the s, v and r vectors
 		// Use directional light
-	    vec3 s = normalize(view_matrix*vec4(lightPos,0) + viewPosition).xyz;
+	    vec3 s = normalize(viewPosition).xyz;
 	    vec3 v = normalize(-viewPosition.xyz);
 	    vec3 r = normalize(reflect(-s,m_unit));
 	
@@ -52,32 +52,56 @@ void main()
 	
 	    outputColor = ambientAndDiffuse*input_color*texture(tex, texCoordFrag) + vec4(specular, 1);
 	} else {
-		vec3 m_unit = normalize(m);
+	
+	    vec3 m_unit = normalize(m);
+	    vec3 front = vec3(0, 0, -1); 
 	    // Compute the s, v and r vectors
-		// Use directional light
-	    vec3 s = normalize(view_matrix*vec4(lightPos,0)+viewPosition).xyz;
-	    vec3 v = normalize(-viewPosition.xyz);
+	    vec3 s = normalize(vec4(front,0)).xyz;
+	    vec3 v = normalize(vec3(front)-viewPosition.xyz);
 	    vec3 r = normalize(reflect(-s,m_unit));
-	
-	
 		// spotlight
-		float theta = dot(-lightPos.xyz, viewPosition.xyz);
-		float epsilon = outercutoff-cutoff;
-		//float intensity = clamp((theta-outercutoff)/epsilon, 0.0, 1.0);
 		
-		float intensity = pow(cos(radians(theta)), epsilon);
+		float theta = dot(v, front.xyz);
 		
-		// attenuation
-		float distance = length(lightPos + viewPosition.xyz);
-		float attenuation = 1.0f/((0.09f*distance)+(0.02f*distance*distance));
+		float epsilon = (outercutoff- cutoff);
+		if(theta < epsilon) {
+			
+			float attenuation = pow(cos(radians(theta)), epsilon);
+		
+			// attenuation
+			float distance = length(viewPosition.xyz-front);
+			
+			vec3 ambient = ambientIntensity*ambientCoeff;
+		    vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
+		    vec3 specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
+		    
+		    vec4 ambientAndDiffuse = vec4(ambient+diffuse, 1);
+		
+		    outputColor = (ambientAndDiffuse*input_color*texture(tex, texCoordFrag) + vec4(specular, 1));
+		} else {
+			// Compute the s, v and r vectors
+			// Use directional light
+			s = normalize(vec4(front, 0)-viewPosition).xyz;
+		
+			vec3 ambient = ambientIntensity*ambientCoeff;
+    		//vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
+    		vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
+    		vec3 specular = vec3(0);//max(lightIntensity*pow(dot(r,v),phongExp), 0.0);;
+		
+		    vec4 ambientAndDiffuse = vec4(ambient + diffuse, 1);
+		
+		    outputColor = ambientAndDiffuse*input_color*texture(tex, texCoordFrag) + vec4(specular, 1);
+		}
 		
 		
-	    vec3 ambient = ambientIntensity*ambientCoeff;
-	    vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
-	    vec3 specular = vec3(0);
-	    vec4 ambientAndDiffuse = vec4(ambient+diffuse, 1);
-	
-	    outputColor = attenuation*ambientAndDiffuse*input_color*texture(tex, texCoordFrag) + vec4(specular, 1);
+	    
 	}
 	
 }
+
+
+		//float theta = 0.5f;
+		//float epsilon = outercutoff-cutoff;
+		//float intensity = clamp((theta-outercutoff)/epsilon, 0.0, 1.0);
+		
+		

@@ -177,30 +177,23 @@ public class World extends Application3D implements KeyListener{
         		setBackground(NIGHT_COLOR);
         		Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));x
         		
-        		//        		Vector3 light;
-//        		if(-x <= terrain.width()-1 && -z <= terrain.depth()-1 && z<=0 && x<=0) {
-//
-//        			light = new Vector3(x, 1.5f-(terrain.altitude(-x, -z)), z);
-//        		} else {
-//        			light = new Vector3(x, -1.5f, z);
-//        		}
         		
                 Shader.setInt(gl, "day", 0);
         		Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
                 Shader.setColor(gl, "lightIntensity", Color.WHITE);
-                Shader.setColor(gl, "ambientIntensity", new Color(0.1f, 0.1f, 0.1f));
+                Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 
                 // Set the material properties
                 Shader.setColor(gl, "ambientCoeff", Color.WHITE);
-                Shader.setColor(gl, "diffuseCoeff", new Color(0.5f, 0.5f, 0.5f));
-                Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
+                Shader.setColor(gl, "diffuseCoeff", new Color(0.1f, 0.1f, 0.1f));
+                Shader.setColor(gl, "specularCoeff", new Color(1f, 1f, 1f));
                 Shader.setFloat(gl, "phongExp", 128f);
                 
 
-	            Shader.setFloat(gl, "b", 30);
-	            Shader.setFloat(gl, "exponent", 0.7f);
-	            Shader.setFloat(gl, "cutoff", 1f);
-	            Shader.setFloat(gl, "outercutoff", 5f);
+	            Shader.setFloat(gl, "b", 8);
+	            Shader.setFloat(gl, "exponent", 0.5f);
+	            Shader.setFloat(gl, "cutoff", 10.5f);
+	            Shader.setFloat(gl, "outercutoff", 25f);
         	}
     	}
         

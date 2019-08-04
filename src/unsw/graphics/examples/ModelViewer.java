@@ -34,9 +34,9 @@ public class ModelViewer extends Application3D {
 
     private static final boolean USE_LIGHTING = true;
 
-    private static final boolean USE_TEXTURE = true;
+    private static final boolean USE_TEXTURE = false;
     
-    private static final boolean USE_CUBEMAP = true; //Lighting must also be on
+    private static final boolean USE_CUBEMAP = false; //Lighting must also be on
 
 
     private static final boolean POSTPROCESS = false;
