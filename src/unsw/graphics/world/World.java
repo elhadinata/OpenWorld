@@ -27,6 +27,7 @@ import unsw.graphics.Texture;
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
+import unsw.graphics.geometry.TriangleFan3D;
 import unsw.graphics.geometry.TriangleMesh;
 import unsw.graphics.scene.MathUtil;
 
@@ -38,7 +39,7 @@ import unsw.graphics.scene.MathUtil;
  * Camera fully working
  * Textured Mesh and Trees
  * Directional Lighting
- * Day Night toggle with keypress "L" <- partially implemented
+ * Day Night toggle with keypress "L" <- implemented
  * Added Test 8
  * Test and Normal Mode, 
  * if TEST==false then will generate 100x100 terrain without trees instead
@@ -90,6 +91,8 @@ public class World extends Application3D implements KeyListener{
 	private static final boolean TEST = true;
 	public static final float INIT_ROTATION = 135;
 	private static final Color NIGHT_COLOR = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+	public static boolean THIRD_PERSON = false;
+	public static final float DISTANCE = 3;// distance of avatar to camera
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -119,15 +122,42 @@ public class World extends Application3D implements KeyListener{
 		super.display(gl);
 		
 		CoordFrame3D viewFrame = CoordFrame3D.identity();
-//		System.out.println((x)+" "+(z));
+		float alt = -1.5f;
 		// Check if camera is within the terrain, if it is then add altitude
 		if(-x <= terrain.width()-1 && -z <= terrain.depth()-1 && z<=0 && x<=0) {
-			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f-(terrain.altitude(-x, -z)), z).getMatrix());
-		} else {
-			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f, z).getMatrix());
+		 alt = -1.5f-(terrain.altitude(-x, -z));
 		}
+		Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, alt, z).getMatrix());
+		
 		CoordFrame3D modelFrame = CoordFrame3D.identity().translate(0, 0, 0);
         
+//		// Draw the avatar
+//		TriangleFan3D face = new TriangleFan3D(-1,-1,1, 1,-1,1, 1,1,1, -1,1,1);
+//		
+//        // Front
+//        Shader.setPenColor(gl, Color.RED);
+//        face.draw(gl, viewFrame.rotateY(-rotation).translate(x, -alt, z));
+//        
+//        // Left
+//        Shader.setPenColor(gl, Color.BLUE);
+//        face.draw(gl, viewFrame.rotateY(-rotation));//.rotateY(-90));
+//        
+//        // Right
+//        Shader.setPenColor(gl, Color.GREEN);
+//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(90));//.translate(-x, -alt, -z).rotateY(90));
+//        
+//        // Back
+//        Shader.setPenColor(gl, Color.CYAN);
+//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(180));//.translate(-x, -alt, -z).rotateY(180));
+//        
+//        // Bottom
+//        Shader.setPenColor(gl, Color.YELLOW);
+//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(-90));//.translate(-x, -alt, -z).rotateX(-90));
+//        
+//        // Top
+//        Shader.setPenColor(gl, Color.MAGENTA);
+//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(90));//.translate(-x, -alt, -z).rotateX(90));
+//		
         
         // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
@@ -185,15 +215,17 @@ public class World extends Application3D implements KeyListener{
 
                 // Set the material properties
                 Shader.setColor(gl, "ambientCoeff", Color.WHITE);
-                Shader.setColor(gl, "diffuseCoeff", new Color(0.1f, 0.1f, 0.1f));
-                Shader.setColor(gl, "specularCoeff", new Color(1f, 1f, 1f));
+                Shader.setColor(gl, "diffuseCoeff", new Color(0.5f, 0.5f, 0.5f));
+                Shader.setColor(gl, "specularCoeff", new Color(0.8f, 0.8f, 0.8f));
                 Shader.setFloat(gl, "phongExp", 128f);
-                
-
-	            Shader.setFloat(gl, "b", 8);
 	            Shader.setFloat(gl, "exponent", 0.5f);
-	            Shader.setFloat(gl, "cutoff", 10.5f);
-	            Shader.setFloat(gl, "outercutoff", 25f);
+	            Shader.setFloat(gl, "cutoff", 10f);
+	            Shader.setFloat(gl, "outercutoff", 17.5f);
+        	
+	            // fog properties
+	            Shader.setFloat(gl, "density", 0.03f);
+	            Shader.setFloat(gl, "gradient", 1.4f);
+	            
         	}
     	}
         
@@ -400,6 +432,10 @@ public class World extends Application3D implements KeyListener{
 		DAY = DAY ^ true;
 		System.out.println("Day = "+DAY);
 	}
+	private void toggleCamera() {
+		THIRD_PERSON = THIRD_PERSON ^ true;
+		System.out.println("Third Person = "+THIRD_PERSON);
+	}
 	
 	@Override
 	public void reshape(GL3 gl, int width, int height) {
@@ -430,7 +466,10 @@ public class World extends Application3D implements KeyListener{
             // Toggle light
         	toggleTime();
             break;
-        
+        case KeyEvent.VK_P:
+            // Toggle 3rd person view
+        	toggleCamera();
+            break;
         default:
             break;
         }
