@@ -50,11 +50,14 @@ public class World extends Application3D implements KeyListener{
     private Terrain terrain;
 	private List<Point3D>  vertex;
 	private List<Integer> indices;
+	private List<Point3D>  vertexWater;
+	private List<Integer> indicesWater;
 	
 	// Terrain, Tree Mesh
 	private TriangleMesh treeMesh;
 	private TriangleMesh terrainMesh;
 	private TriangleMesh skyMesh;
+	private TriangleMesh waterMesh;
 	private TriangleMesh world;
 	
 	private Texture textures[];
@@ -76,6 +79,9 @@ public class World extends Application3D implements KeyListener{
 	// Get Camera translation
 	float x;
 	float z;
+	float x1;
+	float z1;
+	
 	float rotation;
 	
 	/* Properties
@@ -92,7 +98,7 @@ public class World extends Application3D implements KeyListener{
 	public static final float INIT_ROTATION = 135;
 	private static final Color NIGHT_COLOR = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 	public static boolean THIRD_PERSON = false;
-	public static final float DISTANCE = 3;// distance of avatar to camera
+	public static final float DISTANCE = 6;// distance of avatar to camera
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -127,37 +133,41 @@ public class World extends Application3D implements KeyListener{
 		if(-x <= terrain.width()-1 && -z <= terrain.depth()-1 && z<=0 && x<=0) {
 		 alt = -1.5f-(terrain.altitude(-x, -z));
 		}
-		Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, alt, z).getMatrix());
+		if(THIRD_PERSON == false) {
+			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, alt, z).getMatrix());
+		} else {
+//			double offsetX = DISTANCE * (float)Math.sin(Math.toRadians(rotation%360));
+//			double offsetZ = -DISTANCE * (float)Math.cos(Math.toRadians(rotation%360));
+			x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+    		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
+			CoordFrame3D avatar = viewFrame.rotateY(rotation).translate(x, alt, z);
+//			CoordFrame3D camera = viewFrame.rotateY(rotation).translate(x1+(float)offsetX+1, alt, z1+(float)offsetZ+1);
+
+			CoordFrame3D camera = viewFrame.rotateY(rotation).translate(x1, alt, z1);
+			System.out.println("rotation: "+rotation);
+			System.out.println("avatar at: "+x+", "+z);
+			System.out.println("camera at: "+(x1)+", "+(z1)+"\n");
+			
+			
+			Shader.setViewMatrix(gl, camera.getMatrix());
+			
+
+			// Draw the avatar
+			TriangleFan3D face = new TriangleFan3D(-1,-1,1, 1,-1,1, 1,1,1, -1,1,1);
+			
+	        // Front
+	        Shader.setPenColor(gl, Color.RED);
+	        face.draw(gl, viewFrame.translate(-x, -alt, -z).rotateY(-rotation));
+	        
+	        
+		}
 		
 		CoordFrame3D modelFrame = CoordFrame3D.identity().translate(0, 0, 0);
         
-//		// Draw the avatar
-//		TriangleFan3D face = new TriangleFan3D(-1,-1,1, 1,-1,1, 1,1,1, -1,1,1);
-//		
-//        // Front
-//        Shader.setPenColor(gl, Color.RED);
-//        face.draw(gl, viewFrame.rotateY(-rotation).translate(x, -alt, z));
-//        
-//        // Left
-//        Shader.setPenColor(gl, Color.BLUE);
-//        face.draw(gl, viewFrame.rotateY(-rotation));//.rotateY(-90));
-//        
-//        // Right
-//        Shader.setPenColor(gl, Color.GREEN);
-//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(90));//.translate(-x, -alt, -z).rotateY(90));
-//        
-//        // Back
-//        Shader.setPenColor(gl, Color.CYAN);
-//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(180));//.translate(-x, -alt, -z).rotateY(180));
-//        
-//        // Bottom
-//        Shader.setPenColor(gl, Color.YELLOW);
-//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(-90));//.translate(-x, -alt, -z).rotateX(-90));
-//        
-//        // Top
-//        Shader.setPenColor(gl, Color.MAGENTA);
-//        face.draw(gl, viewFrame.rotateY(-rotation).rotateX(90));//.translate(-x, -alt, -z).rotateX(90));
-//		
+		
+		
+//		Shader.setPenColor(gl,Color.BLUE);
+//        waterMesh.draw(gl, modelFrame.translate(0, 0.25f, 0));
         
         // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
@@ -176,11 +186,15 @@ public class World extends Application3D implements KeyListener{
       
         terrainMesh.draw(gl, modelFrame);
         
+       
+        
         // Set tree Texture
-        Shader.setInt(gl, "tex", 1);
-        gl.glActiveTexture(GL.GL_TEXTURE1);
+//        Shader.setInt(gl, "tex", 0);
+//        gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId());
         Shader.setPenColor(gl, Color.WHITE);
+        
+        
         
         if (LIGHTING) {
         	if (DAY) {
@@ -240,6 +254,10 @@ public class World extends Application3D implements KeyListener{
 	        }
         }
         
+        
+        
+        
+        
 	}
 
 	@Override
@@ -265,10 +283,9 @@ public class World extends Application3D implements KeyListener{
 
 		// Inialisation
 		initTerrain(gl);
+		initWater(gl);
 		initTrees(gl);
 		initTexture(gl);
-//		initSky(gl);
-//		world.init(gl);
 		
 //		gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL3.GL_LINE); // DRAW OUTLINE ONLY
 		gl.glDisable(GL.GL_CULL_FACE);
@@ -402,6 +419,41 @@ public class World extends Application3D implements KeyListener{
         this.skyMesh.init(gl);
 	}
 	
+	private void initWater(GL3 gl) {
+		int width = terrain.width();
+        int depth = terrain.depth();
+		this.vertexWater= new ArrayList<>();
+		width *= 2;
+    	depth *= 2;
+    	
+    	for(int z=0; z<width; z++) {
+    		for(int x=0;x <depth ; x++) {
+    			vertexWater.add(new Point3D(x, 0, z));
+        	}
+        }
+
+        this.indicesWater=new ArrayList<>();
+        for(int z=0; z<depth-1; z++) {
+        	for(int x=0; x<width-1; x++) {
+        		
+        		indicesWater.add((x+1)+z*width);	// 1
+        		indicesWater.add(x+(z+1)*width);	// 2
+        		indicesWater.add(x+z*width);		// 0
+
+        		indicesWater.add((x+1)+(z+1)*width);	// 3
+        		indicesWater.add(x+(z+1)*width); 	// 2
+        		indicesWater.add((x+1)+z*width);		// 0
+        		
+        	}
+        }
+        
+        int[] array = new int[indices.size()];
+        for(int i = 0; i < indices.size(); i++) 
+        	array[i] = indices.get(i);
+        
+        waterMesh = new TriangleMesh(vertexWater, indicesWater,true);
+		waterMesh.init(gl);
+	}
 	
 	// Prepare the textures
 	private void initTexture(GL3 gl) {
@@ -450,17 +502,37 @@ public class World extends Application3D implements KeyListener{
         
         case KeyEvent.VK_LEFT:
         	rotation -= 5;
+        	if(THIRD_PERSON == true) {
+        		x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
+        		
+        	}
+        	  
             break;
         case KeyEvent.VK_RIGHT:
         	rotation += 5;
-            break;
+        	if(THIRD_PERSON == true) {
+        		x1 = (float) (x+DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z+-DISTANCE*Math.cos(Math.toRadians(rotation)));
+        		
+        	}
+        	break;
         case KeyEvent.VK_UP:
         	x -= Math.sin(rotation * Math.PI/180);
-            z += Math.cos(rotation * Math.PI/180);            
+            z += Math.cos(rotation * Math.PI/180);       
+            if(THIRD_PERSON == true) {
+            	x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));  
+        	}
+            
             break;
         case KeyEvent.VK_DOWN:
             x += Math.sin(rotation * Math.PI/180);
             z -= Math.cos(rotation * Math.PI/180);
+            if(THIRD_PERSON == true) {
+            	x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
+            }
             break;
         case KeyEvent.VK_L:
             // Toggle light

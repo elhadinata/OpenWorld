@@ -73,8 +73,6 @@ void main()
 			
 			float attenuation = pow(cos(radians(theta)), epsilon);
 			
-			
-			
 			vec3 ambient = ambientIntensity*ambientCoeff;
 		    vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
 		    vec3 specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
@@ -96,9 +94,6 @@ void main()
 		
 		    outputColor = visibility*ambientAndDiffuse*input_color*texture(tex, texCoordFrag);
 		}
-		
-		
-	    
 	}
 	
 }
