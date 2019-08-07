@@ -56,9 +56,9 @@ void main()
 	} else {
 	
 	    vec3 m_unit = normalize(m);
-	    vec3 front = vec3(0, 0, -1); 
+	    vec3 front = vec3(0, 0, 1); 
 	    // Compute the s, v and r vectors
-	    vec3 s = normalize(vec4(-front,0)).xyz;
+	    vec3 s = normalize(vec4(front,0)).xyz;
 	    vec3 v = normalize(-viewPosition.xyz);
 	    vec3 r = normalize(reflect(-s,m_unit));
 		
@@ -66,6 +66,7 @@ void main()
 		float distance = length(viewPosition.xyz);
 		float visibility = exp(-pow((distance*density), gradient));
 		visibility = clamp(visibility, 0.0 , 1.0);
+		
 		// spotlight
 		float theta = dot(v, viewPosition.xyz);
 		float epsilon = (outercutoff- cutoff);
@@ -74,12 +75,12 @@ void main()
 			float attenuation = pow(cos(radians(theta)), epsilon);
 			
 			vec3 ambient = ambientIntensity*ambientCoeff;
-		    vec3 diffuse = max(lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
+		    vec3 diffuse = max(attenuation*lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
 		    vec3 specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
 		    
 		    vec4 ambientAndDiffuse = vec4(ambient+diffuse, 1);
 		
-		    outputColor = visibility*(ambientAndDiffuse*input_color*texture(tex, texCoordFrag) + attenuation*vec4(specular, 1));
+		    outputColor = visibility*(ambientAndDiffuse*input_color*texture(tex, texCoordFrag) + vec4(specular, 1));
 		} else {
 			// Compute the s, v and r vectors
 			// Use directional light
