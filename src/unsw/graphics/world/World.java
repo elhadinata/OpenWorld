@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +27,7 @@ import unsw.graphics.Texture;
 import unsw.graphics.Vector3;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
+import unsw.graphics.geometry.TriangleFan3D;
 import unsw.graphics.geometry.TriangleMesh;
 import unsw.graphics.scene.MathUtil;
 
@@ -37,7 +39,7 @@ import unsw.graphics.scene.MathUtil;
  * Camera fully working
  * Textured Mesh and Trees
  * Directional Lighting
- * Day Night toggle with keypress "L" <- partially implemented
+ * Day Night toggle with keypress "L" <- implemented
  * Added Test 8
  * Test and Normal Mode, 
  * if TEST==false then will generate 100x100 terrain without trees instead
@@ -48,11 +50,14 @@ public class World extends Application3D implements KeyListener{
     private Terrain terrain;
 	private List<Point3D>  vertex;
 	private List<Integer> indices;
+	private List<Point3D>  vertexWater;
+	private List<Integer> indicesWater;
 	
 	// Terrain, Tree Mesh
 	private TriangleMesh treeMesh;
 	private TriangleMesh terrainMesh;
 	private TriangleMesh skyMesh;
+	private TriangleMesh waterMesh;
 	private TriangleMesh world;
 	
 	private Texture textures[];
@@ -74,6 +79,9 @@ public class World extends Application3D implements KeyListener{
 	// Get Camera translation
 	float x;
 	float z;
+	float x1;
+	float z1;
+	
 	float rotation;
 	
 	/* Properties
@@ -89,6 +97,8 @@ public class World extends Application3D implements KeyListener{
 	private static final boolean TEST = true;
 	public static final float INIT_ROTATION = 135;
 	private static final Color NIGHT_COLOR = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+	public static boolean THIRD_PERSON = false;
+	public static final float DISTANCE = 6;// distance of avatar to camera
 	
     public World(Terrain terrain) {
     	super("Assignment 2", 800, 600);
@@ -118,15 +128,46 @@ public class World extends Application3D implements KeyListener{
 		super.display(gl);
 		
 		CoordFrame3D viewFrame = CoordFrame3D.identity();
-//		System.out.println((x)+" "+(z));
+		float alt = -1.5f;
 		// Check if camera is within the terrain, if it is then add altitude
 		if(-x <= terrain.width()-1 && -z <= terrain.depth()-1 && z<=0 && x<=0) {
-			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f-(terrain.altitude(-x, -z)), z).getMatrix());
-		} else {
-			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, -1.5f, z).getMatrix());
+		 alt = -1.5f-(terrain.altitude(-x, -z));
 		}
+		if(THIRD_PERSON == false) {
+			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, alt, z).getMatrix());
+		} else {
+//			double offsetX = DISTANCE * (float)Math.sin(Math.toRadians(rotation%360));
+//			double offsetZ = -DISTANCE * (float)Math.cos(Math.toRadians(rotation%360));
+			x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+    		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
+			CoordFrame3D avatar = viewFrame.rotateY(rotation).translate(x, alt, z);
+//			CoordFrame3D camera = viewFrame.rotateY(rotation).translate(x1+(float)offsetX+1, alt, z1+(float)offsetZ+1);
+
+			CoordFrame3D camera = viewFrame.rotateY(rotation).translate(x1, alt, z1);
+			System.out.println("rotation: "+rotation);
+			System.out.println("avatar at: "+x+", "+z);
+			System.out.println("camera at: "+(x1)+", "+(z1)+"\n");
+			
+			
+			Shader.setViewMatrix(gl, camera.getMatrix());
+			
+
+			// Draw the avatar
+			TriangleFan3D face = new TriangleFan3D(-1,-1,1, 1,-1,1, 1,1,1, -1,1,1);
+			
+	        // Front
+	        Shader.setPenColor(gl, Color.RED);
+	        face.draw(gl, viewFrame.translate(-x, -alt, -z).rotateY(-rotation));
+	        
+	        
+		}
+		
 		CoordFrame3D modelFrame = CoordFrame3D.identity().translate(0, 0, 0);
         
+		
+		
+//		Shader.setPenColor(gl,Color.BLUE);
+//        waterMesh.draw(gl, modelFrame.translate(0, 0.25f, 0));
         
         // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
@@ -145,40 +186,60 @@ public class World extends Application3D implements KeyListener{
       
         terrainMesh.draw(gl, modelFrame);
         
+       
+        
         // Set tree Texture
-        Shader.setInt(gl, "tex", 1);
-        gl.glActiveTexture(GL.GL_TEXTURE1);
+//        Shader.setInt(gl, "tex", 0);
+//        gl.glActiveTexture(GL.GL_TEXTURE0);
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId());
         Shader.setPenColor(gl, Color.WHITE);
         
+        
+        
         if (LIGHTING) {
         	if (DAY) {
-    		setBackground(Color.WHITE);
-        	// Set the lighting properties
-        	Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
-            Shader.setPoint3D(gl, "lightDir", new Point3D(light.getX(),light.getY(),light.getZ()));
-            //Shader.setPoint3D(gl, "lightDir", new Point3D(-1,-1,0));
-            Shader.setColor(gl, "lightIntensity", Color.WHITE);
-            Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
-
-            // Set the material properties
-            Shader.setColor(gl, "ambientCoeff", Color.WHITE);
-            Shader.setColor(gl, "diffuseCoeff", new Color(1f, 1f, 1f));
-            Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
-            Shader.setFloat(gl, "phongExp", 128f);
+	    		setBackground(Color.WHITE);
+	        	// Set the lighting properties
+	    		
+	        	Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
+	            Shader.setInt(gl, "day", 1);
+	        	Shader.setPoint3D(gl, "lightDir", new Point3D(light.getX(),light.getY(),light.getZ()));
+	            //Shader.setPoint3D(gl, "lightDir", new Point3D(-1,-1,0));
+	            Shader.setColor(gl, "lightIntensity", Color.WHITE);
+	            Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
+	
+	            // Set the material properties
+	            Shader.setColor(gl, "ambientCoeff", Color.WHITE);
+	            Shader.setColor(gl, "diffuseCoeff", new Color(1f, 1f, 1f));
+	            Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
+	            Shader.setFloat(gl, "phongExp", 128f);
+	            Shader.setFloat(gl, "b", 0);
+	            Shader.setFloat(gl, "exponent", 1);
+	            
         	} else {
         		
         		setBackground(NIGHT_COLOR);
         		Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));x
-                Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
+        		
+        		
+                Shader.setInt(gl, "day", 0);
+        		Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
                 Shader.setColor(gl, "lightIntensity", Color.WHITE);
-                Shader.setColor(gl, "ambientIntensity", new Color(0.0f, 0.0f, 0.0f));
+                Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 
                 // Set the material properties
                 Shader.setColor(gl, "ambientCoeff", Color.WHITE);
-                Shader.setColor(gl, "diffuseCoeff", new Color(0.7f, 0.7f, 0.7f));
-                Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
+                Shader.setColor(gl, "diffuseCoeff", new Color(0.5f, 0.5f, 0.5f));
+                Shader.setColor(gl, "specularCoeff", new Color(0.8f, 0.8f, 0.8f));
                 Shader.setFloat(gl, "phongExp", 128f);
+	            Shader.setFloat(gl, "exponent", 0.5f);
+	            Shader.setFloat(gl, "cutoff", 10f);
+	            Shader.setFloat(gl, "outercutoff", 17.5f);
+        	
+	            // fog properties
+	            Shader.setFloat(gl, "density", 0.03f);
+	            Shader.setFloat(gl, "gradient", 1.4f);
+	            
         	}
     	}
         
@@ -192,6 +253,10 @@ public class World extends Application3D implements KeyListener{
 	        	treeMesh.draw(gl, treeFrame);
 	        }
         }
+        
+        
+        
+        
         
 	}
 
@@ -218,10 +283,9 @@ public class World extends Application3D implements KeyListener{
 
 		// Inialisation
 		initTerrain(gl);
+		initWater(gl);
 		initTrees(gl);
 		initTexture(gl);
-//		initSky(gl);
-//		world.init(gl);
 		
 //		gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL3.GL_LINE); // DRAW OUTLINE ONLY
 		gl.glDisable(GL.GL_CULL_FACE);
@@ -355,6 +419,41 @@ public class World extends Application3D implements KeyListener{
         this.skyMesh.init(gl);
 	}
 	
+	private void initWater(GL3 gl) {
+		int width = terrain.width();
+        int depth = terrain.depth();
+		this.vertexWater= new ArrayList<>();
+		width *= 2;
+    	depth *= 2;
+    	
+    	for(int z=0; z<width; z++) {
+    		for(int x=0;x <depth ; x++) {
+    			vertexWater.add(new Point3D(x, 0, z));
+        	}
+        }
+
+        this.indicesWater=new ArrayList<>();
+        for(int z=0; z<depth-1; z++) {
+        	for(int x=0; x<width-1; x++) {
+        		
+        		indicesWater.add((x+1)+z*width);	// 1
+        		indicesWater.add(x+(z+1)*width);	// 2
+        		indicesWater.add(x+z*width);		// 0
+
+        		indicesWater.add((x+1)+(z+1)*width);	// 3
+        		indicesWater.add(x+(z+1)*width); 	// 2
+        		indicesWater.add((x+1)+z*width);		// 0
+        		
+        	}
+        }
+        
+        int[] array = new int[indices.size()];
+        for(int i = 0; i < indices.size(); i++) 
+        	array[i] = indices.get(i);
+        
+        waterMesh = new TriangleMesh(vertexWater, indicesWater,true);
+		waterMesh.init(gl);
+	}
 	
 	// Prepare the textures
 	private void initTexture(GL3 gl) {
@@ -385,6 +484,10 @@ public class World extends Application3D implements KeyListener{
 		DAY = DAY ^ true;
 		System.out.println("Day = "+DAY);
 	}
+	private void toggleCamera() {
+		THIRD_PERSON = THIRD_PERSON ^ true;
+		System.out.println("Third Person = "+THIRD_PERSON);
+	}
 	
 	@Override
 	public void reshape(GL3 gl, int width, int height) {
@@ -399,23 +502,46 @@ public class World extends Application3D implements KeyListener{
         
         case KeyEvent.VK_LEFT:
         	rotation -= 5;
+        	if(THIRD_PERSON == true) {
+        		x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
+        		
+        	}
+        	  
             break;
         case KeyEvent.VK_RIGHT:
         	rotation += 5;
-            break;
+        	if(THIRD_PERSON == true) {
+        		x1 = (float) (x+DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z+-DISTANCE*Math.cos(Math.toRadians(rotation)));
+        		
+        	}
+        	break;
         case KeyEvent.VK_UP:
         	x -= Math.sin(rotation * Math.PI/180);
-            z += Math.cos(rotation * Math.PI/180);            
+            z += Math.cos(rotation * Math.PI/180);       
+            if(THIRD_PERSON == true) {
+            	x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));  
+        	}
+            
             break;
         case KeyEvent.VK_DOWN:
             x += Math.sin(rotation * Math.PI/180);
             z -= Math.cos(rotation * Math.PI/180);
+            if(THIRD_PERSON == true) {
+            	x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
+        		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
+            }
             break;
         case KeyEvent.VK_L:
             // Toggle light
         	toggleTime();
             break;
-        
+        case KeyEvent.VK_P:
+            // Toggle 3rd person view
+        	toggleCamera();
+            break;
         default:
             break;
         }
