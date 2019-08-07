@@ -25,6 +25,7 @@ import unsw.graphics.Point3DBuffer;
 import unsw.graphics.Shader;
 import unsw.graphics.Texture;
 import unsw.graphics.Vector3;
+import unsw.graphics.geometry.LineStrip2D;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
 import unsw.graphics.geometry.TriangleFan3D;
@@ -59,6 +60,7 @@ public class World extends Application3D implements KeyListener{
 	private TriangleMesh skyMesh;
 	private TriangleMesh waterMesh;
 	private TriangleMesh world;
+	private TriangleMesh roadMesh;
 	
 	private Texture textures[];
 	
@@ -286,6 +288,7 @@ public class World extends Application3D implements KeyListener{
 		initWater(gl);
 		initTrees(gl);
 		initTexture(gl);
+		initRoad(gl);
 		
 //		gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL3.GL_LINE); // DRAW OUTLINE ONLY
 		gl.glDisable(GL.GL_CULL_FACE);
@@ -487,6 +490,20 @@ public class World extends Application3D implements KeyListener{
 	private void toggleCamera() {
 		THIRD_PERSON = THIRD_PERSON ^ true;
 		System.out.println("Third Person = "+THIRD_PERSON);
+	}
+	
+	private void initRoad(GL3 gl) {
+		LineStrip2D curve = new LineStrip2D();
+		for (Road r : terrain.roads()) {
+			System.out.println("cp: " + r.size());
+			float dt = 1.0f/r.size();
+			for (int i=0; i<r.size(); i++) {
+				float t = i*dt;
+				curve.add(r.point(t));
+				System.out.println("curve: " + r.point(t).getX() + " " + r.point(t).getY());
+			}
+		}
+		curve.draw(gl);
 	}
 	
 	@Override
