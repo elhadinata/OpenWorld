@@ -55,6 +55,7 @@ public class World extends Application3D implements KeyListener{
 	
 	// Terrain, Tree Mesh
 	private TriangleMesh treeMesh;
+	private TriangleMesh avatarMesh;
 	private TriangleMesh terrainMesh;
 	private TriangleMesh skyMesh;
 	private TriangleMesh waterMesh;
@@ -105,6 +106,9 @@ public class World extends Application3D implements KeyListener{
         this.terrain = terrain;
         try {
 			this.world = new TriangleMesh("res/models/cube_normals.ply", true, true);
+			this.treeMesh = new TriangleMesh("res/models/tree.ply", true, true);
+			this.avatarMesh = new TriangleMesh("res/models/cow.ply", true, true);
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -156,9 +160,11 @@ public class World extends Application3D implements KeyListener{
 			TriangleFan3D face = new TriangleFan3D(-1,-1,1, 1,-1,1, 1,1,1, -1,1,1);
 			
 	        // Front
-	        Shader.setPenColor(gl, Color.RED);
-	        face.draw(gl, viewFrame.translate(-x, -alt, -z).rotateY(-rotation));
-	        
+//	        Shader.setPenColor(gl, Color.RED);
+//	        face.draw(gl, viewFrame.translate(-x, -alt, -z).rotateY(-rotation));
+	        Shader.setPenColor(gl, new Color(10, 10, 10));
+	        avatarMesh.draw(gl, viewFrame.translate(-x, -alt-1.5f, -z).rotateY(-rotation).rotateY(90).scale(0.5f, 0.5f, 0.5f));
+//	        
 	        
 		}
 		
@@ -284,7 +290,7 @@ public class World extends Application3D implements KeyListener{
 		// Inialisation
 		initTerrain(gl);
 		initWater(gl);
-		initTrees(gl);
+		initMesh(gl);
 		initTexture(gl);
 		
 //		gl.glPolygonMode(GL.GL_FRONT_AND_BACK, GL3.GL_LINE); // DRAW OUTLINE ONLY
@@ -390,34 +396,12 @@ public class World extends Application3D implements KeyListener{
 	}
 	
 	// Prepare the trees
-	private void initTrees(GL3 gl) {
-		try {
-			this.treeMesh = new TriangleMesh("res/models/tree.ply", true, true);
+	private void initMesh(GL3 gl) {
 			treeMesh.init(gl);
-		} catch (IOException e) {
-			System.out.println("Error reading tree.ply");
-			e.printStackTrace();
-		}
+			avatarMesh.init(gl);
 	}
 	
-	private void initSky(GL3 gl) {
-		List<Point3D> skyVerts = new ArrayList<>();
-        skyVerts.add(new Point3D(100, 0, 100));
-        skyVerts.add(new Point3D(-100, 0, 100));
-        skyVerts.add(new Point3D(100, 120, -100));
-        skyVerts.add(new Point3D(-100, 120, -100));
-
-        List<Point2D> skyTexCoords = new ArrayList<>();
-        skyTexCoords.add(new Point2D(0, 0));
-        skyTexCoords.add(new Point2D(1, 0));
-        skyTexCoords.add(new Point2D(1, 1));
-        skyTexCoords.add(new Point2D(0, 1));
-
-        List<Integer> skyIndices = Arrays.asList(0,1,2, 0,2,3);
-
-        this.skyMesh = new TriangleMesh(skyVerts, skyIndices, false, skyTexCoords);
-        this.skyMesh.init(gl);
-	}
+	
 	
 	private void initWater(GL3 gl) {
 		int width = terrain.width();
