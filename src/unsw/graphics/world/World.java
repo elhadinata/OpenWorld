@@ -479,12 +479,10 @@ public class World extends Application3D implements KeyListener{
 	private void initRoad(GL3 gl) {
 		LineStrip2D curve = new LineStrip2D();
 		for (Road r : terrain.roads()) {
-			System.out.println("cp: " + r.size());
-			float dt = 1.0f/r.size();
-			for (int i=0; i<r.size(); i++) {
-				float t = i*dt;
+			double width = r.width(); // later do something
+			for (float t = 0.00f; t < r.size(); t+=0.01) {
 				curve.add(r.point(t));
-				System.out.println("curve: " + r.point(t).getX() + " " + r.point(t).getY());
+				System.out.println("rpoint: " + r.point(t).getX() + " " + r.point(t).getY());
 			}
 		}
 		curve.draw(gl);
