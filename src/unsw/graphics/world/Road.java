@@ -106,7 +106,15 @@ public class Road {
         throw new IllegalArgumentException("" + i);
     }
     
-    // Derivative Bezier Coefficient
+    
+    /**
+     * Calculate the Bezier coefficients
+     * using Bernstein's formula
+     * 
+     * @param i
+     * @param t
+     * @return
+     */
     private float b1(int i, float t) {
         
         switch(i) {
@@ -126,7 +134,12 @@ public class Road {
         throw new IllegalArgumentException("" + i);
     }
     
-
+    /**
+     * Calculate the tangent at a given point t
+     * 
+     * @param t
+     * @return
+     */
     public Point2D tangent(float t) {
     	int i = (int)Math.floor(t);
         t = t - i;
@@ -139,12 +152,12 @@ public class Road {
         Point2D p3 = points.get(i++);
         
 
-        float x = 3 * (b1(0, t) * p0.getX() + b1(1, t) * p1.getX() + b1(2, t) * p2.getX());
-        float y = 3 * (b1(0, t) * p0.getY() + b1(1, t) * p1.getY() + b1(2, t) * p2.getY());        
+        float x = 3 * (b1(0, t) * p0.getX() + (b1(0, t) - b1(1, t)) * p1.getX() + (b1(1, t) - b1(2, t)) * p2.getX() + b1(2, t) * p3.getX());
+        float y = 3 * (b1(0, t) * p0.getY() + (b1(0, t) - b1(1, t)) * p1.getY() + (b1(1, t) - b1(2, t)) * p2.getY() + b1(2, t) * p3.getY());
         
         return new Point2D(x, y);
-        
     }
+    
     
     public static Point2D normalize(Point2D p) {
     	float length = (float)Math.sqrt((p.getX()*p.getX()) + (p.getY()*p.getY()));

@@ -491,69 +491,54 @@ public class World extends Application3D implements KeyListener{
 	
 	private void initRoad(GL3 gl) {
 		
-		List<Point3D> vertex = new ArrayList<>();
+		List<Point3D> vertices = new ArrayList<>();
 		List<Integer> indices = new ArrayList<>();
 		List<Point2D> texCoord = new ArrayList<>();
 		
-		int count = 0;
 		for (Road r : terrain.roads()) {
-			float width = (float)r.width(); // later do something
-			for (float t = 0.000f; t < r.size(); t+=0.001f) {
-				Point2D p=r.point(t);
-				float x= p.getX();
+			float width = (float)r.width();
+			
+			// Use starting point as altitude for the whole road
+			Point2D start = r.controlPoint(0);
+			float alt = terrain.altitude(start.getX(), start.getY());
+    		System.out.println("alt: " + alt);
+			
+    		int count = 0;
+			for (float t = 0.000f; t <= r.size(); t+=0.001f) {
+				Point2D p = r.point(t);
+				float x = p.getX();
 				float z = p.getY();
-				Point2D tangent = Road.normalize(r.tangent(t)); //k
+				
+				Point2D tangent = Road.normalize(r.tangent(t));
 				Vector3 k = new Vector3(tangent.getX(), 0, tangent.getY()).normalize();
 				Vector3 i = new Vector3(-k.getY(), k.getX(), 0).normalize();
-				Vector3 j = k.cross(i).normalize().scale(0.5f);
+				Vector3 j = k.cross(i).normalize().scale(width/2);
+				Point3D c = new Point3D(x, alt+0.02f, z);
 				
-				Point3D c;
-				float alt;
-				// Check if is within the terrain, if it is then add altitude
-				if(p.getX() <= terrain.width()-1 && p.getY() <= terrain.depth()-1 && p.getX()>=0 && p.getY()>=0 && TEST==true) {
-				 alt = (terrain.altitude(p.getX(), p.getY()));
-				  c = new Point3D(x, alt+0.1f, z);
-					
-				} else {
-					c = new Point3D(x, 0.02f, z);
-					
-				}
-				vertex.add(c.translate(j.negate()));
-				vertex.add(c.translate(j));
-				vertex.add(c.translate(j.scale(width/2).negate()).translate(k));
-				vertex.add(c.translate(j.scale(width/2)).translate(k));
+				vertices.add(c.translate(j.negate()));
+				vertices.add(c.translate(j));
+				vertices.add(c.translate(j.negate()).translate(k));
+				vertices.add(c.translate(j).translate(k));
 				
-//				indices.add(count);
-//				++count;
-//				indices.add(count);
-//				++count;
-//				indices.add(count);
-				
-
         		indices.add(count);		// 0
 				indices.add(count+1);	// 1
         		indices.add(count+2);	// 2
 
-        		indices.add(count+1);		// 1
+        		indices.add(count+1);	// 1
         		indices.add(count+3);	// 3
         		indices.add(count+2); 	// 2
         		
         		count += 2;
-				
-//				texCoord.add(p);
-				
-				System.out.println("rpoint: " + r.point(t).getX() + " " + r.point(t).getY());
 			}
 		}
 		
-		for(int z=0; z<terrain.width(); z++) {
-    		for(int x=0;x <terrain.depth() ; x++) {
-//    			vertex.add(new Point3D(x, terrain.altitude(x, z), z));
+		for (int z=0; z < terrain.depth(); z++) {
+    		for (int x=0; x < terrain.width(); x++) {
     			texCoord.add(new Point2D(x, z));
         	}
         }
-		vertexBuffer1 = new Point3DBuffer(vertex);
-	       
+		
+		vertexBuffer1 = new Point3DBuffer(vertices);
         texCoordBuffer1 = new Point2DBuffer(texCoord);
         
         int[] array = new int[indices.size()];
@@ -561,23 +546,21 @@ public class World extends Application3D implements KeyListener{
         	array[i] = indices.get(i);
         
         indicesBuffer1 = GLBuffers.newDirectIntBuffer(array);
-		
         
-        roadMesh = new TriangleMesh(vertex, indices, true);
+        roadMesh = new TriangleMesh(vertices, indices, true);
         roadMesh.init(gl);
     
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
         gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer1.capacity() * 3 * Float.BYTES,
-                vertexBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+                vertexBuffer1.getBuffer(), GL.GL_STATIC_DRAW);
         
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
         gl.glBufferData(GL.GL_ARRAY_BUFFER, texCoordBuffer1.capacity() * 2 * Float.BYTES,
-                texCoordBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+                texCoordBuffer1.getBuffer(), GL.GL_STATIC_DRAW);
        
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
         gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer1.capacity() * Integer.BYTES,
-                indicesBuffer, GL.GL_STATIC_DRAW);
-		
+                indicesBuffer1, GL.GL_STATIC_DRAW);
 	}
 	
 	@Override
