@@ -222,7 +222,8 @@ public class World extends Application3D implements KeyListener{
 	    		
 	        	Vector3 light = terrain.getSunlight();//.plus(new Vector3(0, 20, 0));
 	            Shader.setInt(gl, "day", 1);
-	        	Shader.setPoint3D(gl, "lightDir", new Point3D(light.getX(),light.getY(),light.getZ()));
+	        	Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
+	        	System.out.println("lightt: " + light.getX() + " " + light.getY() + " " + light.getZ());
 	            Shader.setColor(gl, "lightIntensity", Color.WHITE);
 	            Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 	
@@ -241,7 +242,7 @@ public class World extends Application3D implements KeyListener{
         		
         		
                 Shader.setInt(gl, "day", 0);
-        		Shader.setPoint3D(gl, "lightDir", new Point3D(light.getX(),light.getY(),light.getZ()));
+        		Shader.setPoint3D(gl, "lightPos", new Point3D(light.getX(),light.getY(),light.getZ()));
                 Shader.setColor(gl, "lightIntensity", Color.WHITE);
                 Shader.setColor(gl, "ambientIntensity", new Color(0.2f, 0.2f, 0.2f));
 

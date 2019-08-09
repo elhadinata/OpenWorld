@@ -43,6 +43,7 @@ public class LevelIO {
         float dy = (float)jsonSun.getDouble(1);
         float dz = (float)jsonSun.getDouble(2);
         
+        
         Terrain terrain = new Terrain(width, depth, new Vector3(dx, dy, dz));
        
         JSONArray jsonAltitude = jsonTerrain.getJSONArray("altitude");
