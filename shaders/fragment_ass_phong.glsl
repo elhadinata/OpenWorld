@@ -23,6 +23,7 @@ uniform int day;
 uniform float exponent;
 uniform float cutoff;
 uniform float outercutoff;
+uniform float attenuationFactor;
 
 // fog
 uniform float density;
@@ -72,10 +73,12 @@ void main()
 		float epsilon = (outercutoff- cutoff);
 		if(theta < epsilon) {
 			
-			float attenuation = pow(cos(radians(theta)), epsilon);
+			//float attenuation = pow(cos(radians(theta)), epsilon);
+			float d = length(s-viewPosition.xyz);
+			float attenuation1 = 1/(1+(attenuationFactor*d*d));
 			
 			vec3 ambient = ambientIntensity*ambientCoeff;
-		    vec3 diffuse = max(attenuation*lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
+		    vec3 diffuse = max(attenuation1*lightIntensity*diffuseCoeff*dot(normalize(m_unit),s), 0.0);
 		    vec3 specular = max(lightIntensity*specularCoeff*pow(dot(r,v),phongExp), 0.0);
 		    
 		    vec4 ambientAndDiffuse = vec4(ambient+diffuse, 1);

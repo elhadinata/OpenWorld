@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.jogamp.nativewindow.util.Point;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.opengl.GL;
@@ -65,17 +66,27 @@ public class World extends Application3D implements KeyListener{
 	
 	private Texture textures[];
 	
+	TriangleMesh curve;
 	
 	// Terrain Texture buffer
 	private Point3DBuffer vertexBuffer;
     private Point2DBuffer texCoordBuffer;
     private IntBuffer indicesBuffer;
     
+    // Road Buffer
+    private Point3DBuffer vertexBuffer1;
+    private Point2DBuffer texCoordBuffer1;
+    private IntBuffer indicesBuffer1;
+    
     // Texture buffer ids/names
     private int verticesName;
     private int texCoordsName;
     private int indicesName;
 	
+ // road buffer
+    private int verticesName1;
+    private int texCoordsName1;
+    private int indicesName1;
     
 	private Shader shader;
 	
@@ -221,7 +232,7 @@ public class World extends Application3D implements KeyListener{
 	            Shader.setColor(gl, "diffuseCoeff", new Color(1f, 1f, 1f));
 	            Shader.setColor(gl, "specularCoeff", new Color(0.5f, 0.5f, 0.5f));
 	            Shader.setFloat(gl, "phongExp", 128f);
-	            Shader.setFloat(gl, "b", 0);
+	            Shader.setFloat(gl, "attenuationFactor", 0.5f);
 	            Shader.setFloat(gl, "exponent", 1);
 	            
         	} else {
@@ -263,6 +274,8 @@ public class World extends Application3D implements KeyListener{
         }
         
         
+        Shader.setPenColor(gl, Color.RED);
+        roadMesh.draw(gl, modelFrame);
         
         
         
@@ -334,7 +347,7 @@ public class World extends Application3D implements KeyListener{
 
             		indices.add((x+1)+(z+1)*width);	// 3
             		indices.add(x+(z+1)*width); 	// 2
-            		indices.add((x+1)+z*width);		// 0
+            		indices.add((x+1)+z*width);		// 1
             		
             	}
             }
@@ -477,15 +490,94 @@ public class World extends Application3D implements KeyListener{
 	}
 	
 	private void initRoad(GL3 gl) {
-		LineStrip2D curve = new LineStrip2D();
+		
+		List<Point3D> vertex = new ArrayList<>();
+		List<Integer> indices = new ArrayList<>();
+		List<Point2D> texCoord = new ArrayList<>();
+		
+		int count = 0;
 		for (Road r : terrain.roads()) {
-			double width = r.width(); // later do something
-			for (float t = 0.00f; t < r.size(); t+=0.01) {
-				curve.add(r.point(t));
+			float width = (float)r.width(); // later do something
+			for (float t = 0.000f; t < r.size(); t+=0.001f) {
+				Point2D p=r.point(t);
+				float x= p.getX();
+				float z = p.getY();
+				Point2D tangent = Road.normalize(r.tangent(t)); //k
+				Vector3 k = new Vector3(tangent.getX(), 0, tangent.getY()).normalize();
+				Vector3 i = new Vector3(-k.getY(), k.getX(), 0).normalize();
+				Vector3 j = k.cross(i).normalize().scale(0.5f);
+				
+				Point3D c;
+				float alt;
+				// Check if is within the terrain, if it is then add altitude
+				if(p.getX() <= terrain.width()-1 && p.getY() <= terrain.depth()-1 && p.getX()>=0 && p.getY()>=0 && TEST==true) {
+				 alt = (terrain.altitude(p.getX(), p.getY()));
+				  c = new Point3D(x, alt+0.1f, z);
+					
+				} else {
+					c = new Point3D(x, 0.02f, z);
+					
+				}
+				vertex.add(c.translate(j.negate()));
+				vertex.add(c.translate(j));
+				vertex.add(c.translate(j.scale(width/2).negate()).translate(k));
+				vertex.add(c.translate(j.scale(width/2)).translate(k));
+				
+//				indices.add(count);
+//				++count;
+//				indices.add(count);
+//				++count;
+//				indices.add(count);
+				
+
+        		indices.add(count);		// 0
+				indices.add(count+1);	// 1
+        		indices.add(count+2);	// 2
+
+        		indices.add(count+1);		// 1
+        		indices.add(count+3);	// 3
+        		indices.add(count+2); 	// 2
+        		
+        		count += 2;
+				
+//				texCoord.add(p);
+				
 				System.out.println("rpoint: " + r.point(t).getX() + " " + r.point(t).getY());
 			}
 		}
-		curve.draw(gl);
+		
+		for(int z=0; z<terrain.width(); z++) {
+    		for(int x=0;x <terrain.depth() ; x++) {
+//    			vertex.add(new Point3D(x, terrain.altitude(x, z), z));
+    			texCoord.add(new Point2D(x, z));
+        	}
+        }
+		vertexBuffer1 = new Point3DBuffer(vertex);
+	       
+        texCoordBuffer1 = new Point2DBuffer(texCoord);
+        
+        int[] array = new int[indices.size()];
+        for(int i = 0; i < indices.size(); i++) 
+        	array[i] = indices.get(i);
+        
+        indicesBuffer1 = GLBuffers.newDirectIntBuffer(array);
+		
+        
+        roadMesh = new TriangleMesh(vertex, indices, true);
+        roadMesh.init(gl);
+    
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
+        gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer1.capacity() * 3 * Float.BYTES,
+                vertexBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+        
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
+        gl.glBufferData(GL.GL_ARRAY_BUFFER, texCoordBuffer1.capacity() * 2 * Float.BYTES,
+                texCoordBuffer.getBuffer(), GL.GL_STATIC_DRAW);
+       
+        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
+        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer1.capacity() * Integer.BYTES,
+                indicesBuffer, GL.GL_STATIC_DRAW);
+		
 	}
 	
 	@Override

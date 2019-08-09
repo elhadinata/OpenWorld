@@ -105,6 +105,51 @@ public class Road {
         // this should never happen
         throw new IllegalArgumentException("" + i);
     }
+    
+    // Derivative Bezier Coefficient
+    private float b1(int i, float t) {
+        
+        switch(i) {
+        
+        case 0:
+            return (1-t) * (1-t);
 
+        case 1:
+            return 2 * (1-t) * t;
+            
+        case 2:
+            return 1 * t * t;
 
+        }
+        
+        // this should never happen
+        throw new IllegalArgumentException("" + i);
+    }
+    
+
+    public Point2D tangent(float t) {
+    	int i = (int)Math.floor(t);
+        t = t - i;
+        
+        i *= 3;
+        
+        Point2D p0 = points.get(i++);
+        Point2D p1 = points.get(i++);
+        Point2D p2 = points.get(i++);
+        Point2D p3 = points.get(i++);
+        
+
+        float x = 3 * (b1(0, t) * p0.getX() + b1(1, t) * p1.getX() + b1(2, t) * p2.getX());
+        float y = 3 * (b1(0, t) * p0.getY() + b1(1, t) * p1.getY() + b1(2, t) * p2.getY());        
+        
+        return new Point2D(x, y);
+        
+    }
+    
+    public static Point2D normalize(Point2D p) {
+    	float length = (float)Math.sqrt((p.getX()*p.getX()) + (p.getY()*p.getY()));
+    	
+    	return new Point2D(p.getX()/length, p.getY()/length);
+    }
+    
 }
