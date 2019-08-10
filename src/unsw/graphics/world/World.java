@@ -490,46 +490,54 @@ public class World extends Application3D implements KeyListener{
 	
 	private void initRoad(GL3 gl) {
 		
-		List<Point3D> vertices = new ArrayList<>();
-		List<Integer> indices = new ArrayList<>();
+		List<Point3D> verticesRoad = new ArrayList<>();
+		List<Integer> indicesRoad = new ArrayList<>();
 		List<Point2D> texCoord = new ArrayList<>();
-		
+		int count = 0;
 		for (Road r : terrain.roads()) {
 			float width = (float)r.width();
 			
-			// Use starting point as altitude for the whole road
-			Point2D start = r.controlPoint(0);
-			float alt = terrain.altitude(start.getX(), start.getY());
-    		System.out.println("alt: " + alt);
-			
-    		int count = 0;
-			for (float t = 0.000f; t <= r.size(); t+=0.001f) {
-				Point2D p = r.point(t);
-				float x = p.getX();
-				float z = p.getY();
+			for(int n = 0; n< r.size(); ++n) {
+				// Use starting point as altitude for the whole road
+				Point2D start = r.controlPoint(n);
+				float alt = terrain.altitude(start.getX(), start.getY());
+	    		System.out.println("alt: " + alt);
 				
-				Point2D tangent = Road.normalize(r.tangent(t));
-				Vector3 k = new Vector3(tangent.getX(), 0, tangent.getY()).normalize();
-				Vector3 i = new Vector3(-k.getY(), k.getX(), 0).normalize();
-				Vector3 j = k.cross(i).normalize().scale(width/2);
-				Point3D c = new Point3D(x, alt+0.02f, z);
-				
-				vertices.add(c.translate(j.negate()));
-				vertices.add(c.translate(j));
-				vertices.add(c.translate(j.negate()).translate(k));
-				vertices.add(c.translate(j).translate(k));
-				
-        		indices.add(count);		// 0
-				indices.add(count+1);	// 1
-        		indices.add(count+2);	// 2
+	    		
+	    		
+				for (float t = 0.000f; t <= r.size(); t+=0.001f) {
+					System.out.println("t: "+t);
+					Point2D p = r.point(t);
+					float x = p.getX();
+					float z = p.getY();
+					
+					Point2D tangent = Road.normalize(r.tangent(t));
+					Vector3 k = new Vector3(tangent.getX(), 0, tangent.getY()).normalize();
+					Vector3 i = new Vector3(-k.getY(), k.getX(), 0).normalize();
+					Vector3 j = k.cross(i).normalize().scale(0.5f);
+					Point3D c = new Point3D(x, alt+0.02f, z);
+					
+					verticesRoad.add(c.translate(j.negate()));
+					verticesRoad.add(c.translate(j));
+					verticesRoad.add(c.translate(j.negate()).translate(k));
+					verticesRoad.add(c.translate(j).translate(k));
+					
+					
+	        		indicesRoad.add(count);		// 0
+					indicesRoad.add(count+1);	// 1
+	        		indicesRoad.add(count+2);	// 2
 
-        		indices.add(count+1);	// 1
-        		indices.add(count+3);	// 3
-        		indices.add(count+2); 	// 2
-        		
-        		count += 2;
+
+	        		indicesRoad.add(count+2); 	// 2
+	        		indicesRoad.add(count+1);	// 1
+	        		indicesRoad.add(count+3);	// 3
+	        		
+	        		count += 2;
+				}
 			}
+			
 		}
+		
 		
 		for (int z=0; z < terrain.depth(); z++) {
     		for (int x=0; x < terrain.width(); x++) {
@@ -537,20 +545,20 @@ public class World extends Application3D implements KeyListener{
         	}
         }
 		
-		vertexBuffer1 = new Point3DBuffer(vertices);
+		vertexBuffer1 = new Point3DBuffer(verticesRoad);
         texCoordBuffer1 = new Point2DBuffer(texCoord);
         
-        int[] array = new int[indices.size()];
-        for(int i = 0; i < indices.size(); i++) 
-        	array[i] = indices.get(i);
+        int[] array = new int[indicesRoad.size()];
+        for(int i = 0; i < indicesRoad.size(); i++) 
+        	array[i] = indicesRoad.get(i);
         
         indicesBuffer1 = GLBuffers.newDirectIntBuffer(array);
         
-        roadMesh = new TriangleMesh(vertices, indices, true);
+        roadMesh = new TriangleMesh(verticesRoad, indicesRoad, true);
         roadMesh.init(gl);
     
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
-        gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer1.capacity() * 3 * Float.BYTES,
+        gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer1.capacity()* 3 * Float.BYTES,
                 vertexBuffer1.getBuffer(), GL.GL_STATIC_DRAW);
         
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);

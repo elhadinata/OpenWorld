@@ -62,10 +62,12 @@ public class Road {
      */
     public Point2D point(float t) {
         int i = (int)Math.floor(t);
+        //System.out.println("i is "+ i);
+        
         t = t - i;
-        
+        //System.out.println("t is "+ t);
         i *= 3;
-        
+        //System.out.println("segment start is "+ i);
         Point2D p0 = points.get(i++);
         Point2D p1 = points.get(i++);
         Point2D p2 = points.get(i++);
@@ -152,9 +154,8 @@ public class Road {
         Point2D p3 = points.get(i++);
         
 
-        float x = 3 * (b1(0, t) * p0.getX() + (b1(0, t) - b1(1, t)) * p1.getX() + (b1(1, t) - b1(2, t)) * p2.getX() + b1(2, t) * p3.getX());
-        float y = 3 * (b1(0, t) * p0.getY() + (b1(0, t) - b1(1, t)) * p1.getY() + (b1(1, t) - b1(2, t)) * p2.getY() + b1(2, t) * p3.getY());
-        
+        float x = 3 * (b1(0, t) * (p1.getX()-p0.getX()) + b1(1, t) * (p2.getX()-p1.getX()) + b1(2, t) * (p3.getX()-p2.getX()));
+        float y = 3 * (b1(0, t) * (p1.getY()-p0.getY()) + b1(1, t) * (p2.getY()-p1.getY()) + b1(2, t) * (p3.getY()-p2.getY()));
         return new Point2D(x, y);
     }
     
