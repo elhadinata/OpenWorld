@@ -6,18 +6,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.IntBuffer;
-import java.time.Year;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-
-import com.jogamp.nativewindow.util.Point;
 import com.jogamp.newt.event.KeyEvent;
 import com.jogamp.newt.event.KeyListener;
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL3;
 import com.jogamp.opengl.util.GLBuffers;
-
 import unsw.graphics.Application3D;
 import unsw.graphics.CoordFrame3D;
 import unsw.graphics.Matrix4;
@@ -26,12 +21,10 @@ import unsw.graphics.Point3DBuffer;
 import unsw.graphics.Shader;
 import unsw.graphics.Texture;
 import unsw.graphics.Vector3;
-import unsw.graphics.geometry.LineStrip2D;
 import unsw.graphics.geometry.Point2D;
 import unsw.graphics.geometry.Point3D;
 import unsw.graphics.geometry.TriangleFan3D;
 import unsw.graphics.geometry.TriangleMesh;
-import unsw.graphics.scene.MathUtil;
 
 
 
@@ -59,7 +52,6 @@ public class World extends Application3D implements KeyListener{
 	private TriangleMesh treeMesh;
 	private TriangleMesh avatarMesh;
 	private TriangleMesh terrainMesh;
-	private TriangleMesh skyMesh;
 	private TriangleMesh waterMesh;
 	private TriangleMesh world;
 	private TriangleMesh roadMesh;
@@ -153,12 +145,9 @@ public class World extends Application3D implements KeyListener{
 		if(THIRD_PERSON == false) {
 			Shader.setViewMatrix(gl, viewFrame.rotateY(rotation).translate(x, alt, z).getMatrix());
 		} else {
-//			double offsetX = DISTANCE * (float)Math.sin(Math.toRadians(rotation%360));
-//			double offsetZ = -DISTANCE * (float)Math.cos(Math.toRadians(rotation%360));
 			x1 = (float) (x + DISTANCE*Math.sin(Math.toRadians(rotation)));
     		z1 = (float) (z + -DISTANCE*Math.cos(Math.toRadians(rotation)));
 			CoordFrame3D avatar = viewFrame.rotateY(rotation).translate(x, alt, z);
-//			CoordFrame3D camera = viewFrame.rotateY(rotation).translate(x1+(float)offsetX+1, alt, z1+(float)offsetZ+1);
 
 			CoordFrame3D camera = viewFrame.rotateY(rotation).translate(x1, alt, z1);
 			System.out.println("rotation: "+rotation);
@@ -168,25 +157,14 @@ public class World extends Application3D implements KeyListener{
 			
 			Shader.setViewMatrix(gl, camera.getMatrix());
 			
-
-			// Draw the avatar
-			TriangleFan3D face = new TriangleFan3D(-1,-1,1, 1,-1,1, 1,1,1, -1,1,1);
-			
-	        // Front
-//	        Shader.setPenColor(gl, Color.RED);
-//	        face.draw(gl, viewFrame.translate(-x, -alt, -z).rotateY(-rotation));
 	        Shader.setPenColor(gl, new Color(10, 10, 10));
 	        avatarMesh.draw(gl, viewFrame.translate(-x, -alt-1.5f, -z).rotateY(-rotation).rotateY(90).scale(0.5f, 0.5f, 0.5f));
-//	        
+	        
 	        
 		}
 		
 		CoordFrame3D modelFrame = CoordFrame3D.identity().translate(0, 0, 0);
         
-		
-		
-//		Shader.setPenColor(gl,Color.BLUE);
-//        waterMesh.draw(gl, modelFrame.translate(0, 0.25f, 0));
         
         // Set Terrain Texture
         Shader.setInt(gl, "tex", 0);
@@ -206,14 +184,9 @@ public class World extends Application3D implements KeyListener{
         terrainMesh.draw(gl, modelFrame);
         
        
-        
-        // Set tree Texture
-//        Shader.setInt(gl, "tex", 0);
-//        gl.glActiveTexture(GL.GL_TEXTURE0);
+        // Set the tree texture
         gl.glBindTexture(GL.GL_TEXTURE_2D, textures[1].getId());
         Shader.setPenColor(gl, Color.WHITE);
-        
-        
         
         if (LIGHTING) {
         	if (DAY) {
@@ -272,8 +245,8 @@ public class World extends Application3D implements KeyListener{
 	        }
         }
         
-        
-        Shader.setPenColor(gl, Color.RED);
+        gl.glBindTexture(GL.GL_TEXTURE_2D, textures[2].getId());
+        Shader.setPenColor(gl, Color.WHITE);
         roadMesh.draw(gl, modelFrame);
         
         
@@ -293,12 +266,15 @@ public class World extends Application3D implements KeyListener{
 		rotation = INIT_ROTATION;
 		getWindow().addKeyListener(this);
 		
-		int[] names = new int[3];
-        gl.glGenBuffers(3, names, 0);
+		int[] names = new int[6];
+        gl.glGenBuffers(6, names, 0);
         
         verticesName = names[0];
         texCoordsName = names[1];
         indicesName = names[2];
+        verticesName1 = names[3];
+        texCoordsName1 = names[4];
+        indicesName1 = names[5];
 		
 
 		// Inialisation
@@ -459,19 +435,11 @@ public class World extends Application3D implements KeyListener{
 		textures = new Texture[4];
 		textures[0] = new Texture(gl, "res/textures/cartoon_grass.jpg", "jpg", false);
 		textures[1] = new Texture(gl, "res/textures/rock.bmp", "bmp", false);
-        textures[2] = new Texture(gl, "res/textures/sky.bmp", "bmp", false);
-		textures[3] = new Texture(gl, "res/textures/darkskies/darkskies_lf.png",
-                    "res/textures/darkskies/darkskies_rt.png",
-                    "res/textures/darkskies/darkskies_dn.png",
-                    "res/textures/darkskies/darkskies_up.png",
-                    "res/textures/darkskies/darkskies_ft.png",
-                    "res/textures/darkskies/darkskies_bk.png", "png", false);
+        textures[2] = new Texture(gl, "res/textures/road.jpg", "jpg", false);
         
         if (LIGHTING) {
 			shader = new Shader(gl, "shaders/vertex_ass_phong.glsl",
                     "shaders/fragment_ass_phong.glsl");
-//        	shader = new Shader(gl, "shaders/vertex_phong.glsl",
-//                    "shaders/fragment_cubemap.glsl");
         } else {
         	shader = new Shader(gl, "shaders/vertex_tex_3d.glsl",
 	                "shaders/fragment_tex_3d.glsl");
@@ -492,10 +460,9 @@ public class World extends Application3D implements KeyListener{
 		
 		List<Point3D> verticesRoad = new ArrayList<>();
 		List<Integer> indicesRoad = new ArrayList<>();
-		List<Point2D> texCoord = new ArrayList<>();
+		List<Point2D> texCoordRoad = new ArrayList<>();
 		int count = 0;
 		for (Road r : terrain.roads()) {
-			float width = (float)r.width();
 			
 			for(int n = 0; n< r.size(); ++n) {
 				// Use starting point as altitude for the whole road
@@ -503,8 +470,6 @@ public class World extends Application3D implements KeyListener{
 				float alt = terrain.altitude(start.getX(), start.getY());
 	    		System.out.println("alt: " + alt);
 				
-	    		
-	    		
 				for (float t = 0.000f; t <= r.size(); t+=0.001f) {
 					System.out.println("t: "+t);
 					Point2D p = r.point(t);
@@ -532,21 +497,20 @@ public class World extends Application3D implements KeyListener{
 	        		indicesRoad.add(count+1);	// 1
 	        		indicesRoad.add(count+3);	// 3
 	        		
-	        		count += 2;
+	        		count += 4;
+	        		texCoordRoad.add(p.translate(tangent.getX(), tangent.getY()));
+	        		texCoordRoad.add(p.translate(-tangent.getX(), tangent.getY()));
+	        		texCoordRoad.add(p.translate(-tangent.getX(), -tangent.getY()));
+	        		
+	        		
 				}
 			}
 			
 		}
 		
 		
-		for (int z=0; z < terrain.depth(); z++) {
-    		for (int x=0; x < terrain.width(); x++) {
-    			texCoord.add(new Point2D(x, z));
-        	}
-        }
-		
 		vertexBuffer1 = new Point3DBuffer(verticesRoad);
-        texCoordBuffer1 = new Point2DBuffer(texCoord);
+        texCoordBuffer1 = new Point2DBuffer(texCoordRoad);
         
         int[] array = new int[indicesRoad.size()];
         for(int i = 0; i < indicesRoad.size(); i++) 
@@ -557,15 +521,15 @@ public class World extends Application3D implements KeyListener{
         roadMesh = new TriangleMesh(verticesRoad, indicesRoad, true);
         roadMesh.init(gl);
     
-		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName);
+		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, verticesName1);
         gl.glBufferData(GL.GL_ARRAY_BUFFER, vertexBuffer1.capacity()* 3 * Float.BYTES,
                 vertexBuffer1.getBuffer(), GL.GL_STATIC_DRAW);
         
-        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName);
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, texCoordsName1);
         gl.glBufferData(GL.GL_ARRAY_BUFFER, texCoordBuffer1.capacity() * 2 * Float.BYTES,
                 texCoordBuffer1.getBuffer(), GL.GL_STATIC_DRAW);
        
-        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName);
+        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indicesName1);
         gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer1.capacity() * Integer.BYTES,
                 indicesBuffer1, GL.GL_STATIC_DRAW);
 	}
