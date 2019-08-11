@@ -463,7 +463,7 @@ public class World extends Application3D implements KeyListener{
 		List<Point2D> texCoordRoad = new ArrayList<>();
 		int count = 0;
 		for (Road r : terrain.roads()) {
-			
+			float w = (float)r.width();
 			for(int n = 0; n< r.size(); ++n) {
 				// Use starting point as altitude for the whole road
 				Point2D start = r.controlPoint(n);
@@ -479,7 +479,7 @@ public class World extends Application3D implements KeyListener{
 					Point2D tangent = Road.normalize(r.tangent(t));
 					Vector3 k = new Vector3(tangent.getX(), 0, tangent.getY()).normalize();
 					Vector3 i = new Vector3(-k.getY(), k.getX(), 0).normalize();
-					Vector3 j = k.cross(i).normalize().scale(0.5f);
+					Vector3 j = k.cross(i).normalize().scale(1+(0.5f*w));
 					Point3D c = new Point3D(x, alt+0.02f, z);
 					
 					verticesRoad.add(c.translate(j.negate()));
@@ -498,15 +498,17 @@ public class World extends Application3D implements KeyListener{
 	        		indicesRoad.add(count+3);	// 3
 	        		
 	        		count += 4;
-	        		texCoordRoad.add(p.translate(tangent.getX(), tangent.getY()));
-	        		texCoordRoad.add(p.translate(-tangent.getX(), tangent.getY()));
-	        		texCoordRoad.add(p.translate(-tangent.getX(), -tangent.getY()));
 	        		
 	        		
 				}
 			}
 			
 		}
+
+		texCoordRoad.add(new Point2D(0, 0));
+		texCoordRoad.add(new Point2D(1, 0));
+		texCoordRoad.add(new Point2D(0, 1));
+		texCoordRoad.add(new Point2D(1, 1));
 		
 		
 		vertexBuffer1 = new Point3DBuffer(verticesRoad);
