@@ -479,7 +479,9 @@ public class World extends Application3D implements KeyListener{
 					Point2D tangent = Road.normalize(r.tangent(t));
 					Vector3 k = new Vector3(tangent.getX(), 0, tangent.getY()).normalize();
 					Vector3 i = new Vector3(-k.getY(), k.getX(), 0).normalize();
-					Vector3 j = k.cross(i).normalize().scale(1+(0.5f*w));
+					Vector3 j = k.cross(i).normalize().scale(0.5f*w);
+
+		    		System.out.println("j: " + j.getX() + " " + j.getY() + " " + j.getZ());
 					Point3D c = new Point3D(x, alt+0.02f, z);
 					
 					verticesRoad.add(c.translate(j.negate()));
